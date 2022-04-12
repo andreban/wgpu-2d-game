@@ -243,12 +243,13 @@ impl <'a> SquarePipeline {
         }
     }
 
-    pub fn render(&'a mut self, render_pass: &mut RenderPass<'a>, quad: &Quad) {
-        // queue.write_buffer(
-        //     &self.color_buffer,
-        //     0,
-        //     bytemuck::cast_slice(&[quad.color.into()]),
-        // );
+    pub fn render(&'a mut self, render_pass: &mut RenderPass<'a>, queue: &mut Queue, quad: &Quad) {
+        let color: [f32; 3] = quad.color.into();
+        queue.write_buffer(
+            &self.color_buffer,
+            0,
+            bytemuck::cast_slice(&[color]),
+        );
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_bind_group(0, &self.color_bind_group, &[]);
         render_pass.set_bind_group(1, &self.camera_bind_group, &[]);

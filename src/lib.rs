@@ -26,7 +26,7 @@ pub async fn run() {
     let quad = Quad {
         position: (0.0, 0.0).into(),
         size: (100.0, 100.0).into(),
-        color: (0.0, 1.0, 0.0).into(),
+        color: (1.0, 0.0, 0.0).into(),
     };
 
     event_loop.run(move |event, _, control_flow| {
@@ -52,9 +52,12 @@ pub async fn run() {
                 }
             }
             Event::RedrawRequested(window_id) => {
-                let mut render = webgpu.start_render().unwrap();
-                let mut render_pass = render.render_pass();
-                tutorial3.render(&mut render_pass, &quad);
+                if window_id != window.id() {
+                    return;
+                }
+                let (mut render, view) = webgpu.start_render().unwrap();
+                let mut render_pass = Render::render_pass(&mut render.encoder, &view);
+                tutorial3.render(&mut render_pass, &mut render.webgpu.queue, &quad);
                 drop(render_pass);
                 render.draw();
             }

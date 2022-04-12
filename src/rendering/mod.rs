@@ -80,20 +80,20 @@ impl WebGpu {
         }
     }
 
-    pub fn start_render(&mut self) -> Result<Render, wgpu::SurfaceError> {
+    pub fn start_render(&mut self) -> Result<(Render, TextureView), wgpu::SurfaceError> {
         Render::new(self)
     }
 }
 
 pub struct Render<'a> {
     pub output: SurfaceTexture,
-    pub view: TextureView,
+    // pub view: TextureView,
     pub encoder: CommandEncoder,
     pub webgpu: &'a mut WebGpu,
 }
 
 impl <'a> Render<'a> {
-    fn new(webgpu: &'a mut WebGpu) -> Result<Self, wgpu::SurfaceError> {
+    fn new(webgpu: &'a mut WebGpu) -> Result<(Self, TextureView), wgpu::SurfaceError> {
         let output = webgpu.surface.get_current_texture()?;
         let view = output
             .texture
@@ -104,19 +104,19 @@ impl <'a> Render<'a> {
                 label: Some("Render Encoder"),
             });
 
-        Ok(Render {
+        Ok((Render {
             output,
-            view,
+            // view,
             encoder,
             webgpu,
-        })
+        }, view))
     }
 
-    pub fn render_pass(&mut self) -> RenderPass {
-        self.encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+    pub fn render_pass<'b>(encoder: &'b mut CommandEncoder, view: &'b TextureView) -> RenderPass<'b> {
+        encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
             color_attachments: &[wgpu::RenderPassColorAttachment {
-                view: &self.view,
+                view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
