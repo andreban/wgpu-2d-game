@@ -1,6 +1,6 @@
-use cgmath::{Matrix4, Vector2};
 use cgmath::One;
 use cgmath::SquareMatrix;
+use cgmath::{Matrix4, Vector2};
 use winit::dpi::PhysicalSize;
 
 pub struct Camera2d {
@@ -16,14 +16,13 @@ impl Camera2d {
         }
     }
 
-    pub fn build_matrix(&self) -> cgmath::Matrix4<f32>{
+    pub fn build_matrix(&self) -> cgmath::Matrix4<f32> {
         let view = cgmath::Matrix4::look_at_rh(
             (self.position.x, self.position.y, 1.0).into(),
             (self.position.x, self.position.y, 0.0).into(),
             cgmath::Vector3::unit_y(),
         );
-        let proj =
-            cgmath::ortho(0.0, self.size.width, 0.0, self.size.height, 0.1, 100.0);
+        let proj = cgmath::ortho(0.0, self.size.width, 0.0, self.size.height, 0.1, 100.0);
         proj * view
     }
 }

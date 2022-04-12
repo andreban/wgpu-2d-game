@@ -2,7 +2,10 @@ pub mod camera2d;
 pub mod pipelines;
 
 use std::iter;
-use wgpu::{Adapter, CommandEncoder, Device, Instance, Queue, RenderPass, Surface, SurfaceConfiguration, SurfaceTexture, TextureView};
+use wgpu::{
+    Adapter, CommandEncoder, Device, Instance, Queue, RenderPass, Surface, SurfaceConfiguration,
+    SurfaceTexture, TextureView,
+};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
@@ -80,20 +83,20 @@ impl WebGpu {
         }
     }
 
-    pub fn start_render(&mut self) -> Result<(Render, TextureView), wgpu::SurfaceError> {
+    pub fn start_render(&mut self) -> Result<Render, wgpu::SurfaceError> {
         Render::new(self)
     }
 }
 
 pub struct Render<'a> {
     pub output: SurfaceTexture,
-    // pub view: TextureView,
+    pub view: TextureView,
     pub encoder: CommandEncoder,
     pub webgpu: &'a mut WebGpu,
 }
 
-impl <'a> Render<'a> {
-    fn new(webgpu: &'a mut WebGpu) -> Result<(Self, TextureView), wgpu::SurfaceError> {
+impl<'a> Render<'a> {
+    fn new(webgpu: &'a mut WebGpu) -> Result<Self, wgpu::SurfaceError> {
         let output = webgpu.surface.get_current_texture()?;
         let view = output
             .texture
@@ -104,15 +107,18 @@ impl <'a> Render<'a> {
                 label: Some("Render Encoder"),
             });
 
-        Ok((Render {
+        Ok(Render {
             output,
-            // view,
+            view,
             encoder,
             webgpu,
-        }, view))
+        })
     }
 
-    pub fn render_pass<'b>(encoder: &'b mut CommandEncoder, view: &'b TextureView) -> RenderPass<'b> {
+    pub fn render_pass<'b>(
+        encoder: &'b mut CommandEncoder,
+        view: &'b TextureView,
+    ) -> RenderPass<'b> {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
             color_attachments: &[wgpu::RenderPassColorAttachment {
