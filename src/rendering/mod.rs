@@ -1,4 +1,4 @@
-pub mod camera2d;
+pub mod camera;
 pub mod pipelines;
 pub mod texture;
 
@@ -18,7 +18,7 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
     0.0, 0.0, 0.5, 1.0,
 );
 
-pub struct WebGpu {
+pub struct Graphics {
     pub size: PhysicalSize<u32>,
     pub instance: Instance,
     pub surface: Surface,
@@ -28,10 +28,9 @@ pub struct WebGpu {
     pub configuration: SurfaceConfiguration,
 }
 
-impl WebGpu {
+impl Graphics {
     pub async fn new(window: &Window) -> Self {
         let size = window.inner_size();
-        println!("{}", size.width as f32 / size.height as f32);
 
         // Create an instance of WebGPU.
         let instance = wgpu::Instance::new(wgpu::Backends::all());
@@ -72,7 +71,7 @@ impl WebGpu {
         };
         surface.configure(&device, &config);
 
-        WebGpu {
+        Graphics {
             size,
             instance,
             surface,
@@ -92,35 +91,35 @@ impl WebGpu {
         }
     }
 
-    pub fn start_render(&mut self) -> Result<Render, wgpu::SurfaceError> {
-        Render::new(self)
+    pub fn start_render(&mut self) -> Result<Renderer, wgpu::SurfaceError> {
+        Renderer::new(self)
     }
 }
 
-pub struct Render<'a> {
+pub struct Renderer<'a> {
     pub output: SurfaceTexture,
     pub view: TextureView,
     pub encoder: CommandEncoder,
-    pub webgpu: &'a mut WebGpu,
+    pub graphics: &'a mut Graphics,
 }
 
-impl<'a> Render<'a> {
-    fn new(webgpu: &'a mut WebGpu) -> Result<Self, wgpu::SurfaceError> {
-        let output = webgpu.surface.get_current_texture()?;
+impl<'a> Renderer<'a> {
+    fn new(graphics: &'a mut Graphics) -> Result<Self, wgpu::SurfaceError> {
+        let output = graphics.surface.get_current_texture()?;
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let encoder = webgpu
+        let encoder = graphics
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
 
-        Ok(Render {
+        Ok(Renderer {
             output,
             view,
             encoder,
-            webgpu,
+            graphics,
         })
     }
 
@@ -148,7 +147,9 @@ impl<'a> Render<'a> {
     }
 
     pub fn draw(self) {
-        self.webgpu.queue.submit(iter::once(self.encoder.finish()));
+        self.graphics
+            .queue
+            .submit(iter::once(self.encoder.finish()));
         self.output.present();
     }
 }

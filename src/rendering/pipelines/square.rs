@@ -1,5 +1,6 @@
-use crate::rendering::camera2d::Camera2d;
-use crate::{Square, WebGpu};
+use crate::rendering::camera::{Camera2d, CameraUniform};
+use crate::rendering::pipelines::{Vertex, SQUARE_INDICES, SQUARE_VERTICES};
+use crate::{Graphics, Square};
 use cgmath::Matrix4;
 use wgpu::util::DeviceExt;
 use wgpu::{BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute};
@@ -74,22 +75,20 @@ pub struct SquarePipeline {
 }
 
 impl<'a> SquarePipeline {
-    pub fn new(webgpu: &mut WebGpu) -> Self {
-        let shader = webgpu
+    pub fn new(graphics: &mut Graphics) -> Self {
+        let shader = graphics
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
-                source: wgpu::ShaderSource::Wgsl(
-                    include_str!("../../../shaders/square.wgsl").into(),
-                ),
+                source: wgpu::ShaderSource::Wgsl(include_str!("../shaders/square.wgsl").into()),
             });
 
         // Camera Uniform
         let camera2d = Camera2d::new(600.0, 650.0);
-        let mut camera_uniform = crate::rendering::pipelines::CameraUniform::new();
+        let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera2d);
 
-        let camera_buffer = webgpu
+        let camera_buffer = graphics
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Camera Buffer"),
@@ -98,7 +97,7 @@ impl<'a> SquarePipeline {
             });
 
         let camera_bind_group_layout =
-            webgpu
+            graphics
                 .device
                 .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                     entries: &[wgpu::BindGroupLayoutEntry {
@@ -114,18 +113,20 @@ impl<'a> SquarePipeline {
                     label: Some("camera_bind_group_layout"),
                 });
 
-        let camera_bind_group = webgpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &camera_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: camera_buffer.as_entire_binding(),
-            }],
-            label: Some("camera_bind_group"),
-        });
+        let camera_bind_group = graphics
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &camera_bind_group_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: camera_buffer.as_entire_binding(),
+                }],
+                label: Some("camera_bind_group"),
+            });
 
         // Render Pipeline
         let render_pipeline_layout =
-            webgpu
+            graphics
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
@@ -134,7 +135,7 @@ impl<'a> SquarePipeline {
                 });
 
         let render_pipeline =
-            webgpu
+            graphics
                 .device
                 .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                     label: Some("Render Pipeline"),
@@ -142,13 +143,13 @@ impl<'a> SquarePipeline {
                     vertex: wgpu::VertexState {
                         module: &shader,
                         entry_point: "vs_main",
-                        buffers: &[super::Vertex::desc(), SquareInstance::desc()],
+                        buffers: &[Vertex::desc(), SquareInstance::desc()],
                     },
                     fragment: Some(wgpu::FragmentState {
                         module: &shader,
                         entry_point: "fs_main",
                         targets: &[wgpu::ColorTargetState {
-                            format: webgpu.configuration.format,
+                            format: graphics.configuration.format,
                             blend: Some(wgpu::BlendState {
                                 color: wgpu::BlendComponent::REPLACE,
                                 alpha: wgpu::BlendComponent::REPLACE,
@@ -180,23 +181,23 @@ impl<'a> SquarePipeline {
                 });
 
         // Vertex & Index Buffers
-        let vertex_buffer = webgpu
+        let vertex_buffer = graphics
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(super::VERTICES),
+                contents: bytemuck::cast_slice(SQUARE_VERTICES),
                 usage: wgpu::BufferUsages::VERTEX,
             });
-        let index_buffer = webgpu
+        let index_buffer = graphics
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(super::INDICES),
+                contents: bytemuck::cast_slice(SQUARE_INDICES),
                 usage: wgpu::BufferUsages::INDEX,
             });
-        let num_indices = super::INDICES.len() as u32;
+        let num_indices = SQUARE_INDICES.len() as u32;
 
-        let instance_buffer = webgpu.device.create_buffer(&BufferDescriptor {
+        let instance_buffer = graphics.device.create_buffer(&BufferDescriptor {
             label: Some("Instance Buffer"),
             size: (std::mem::size_of::<SquareInstance>() * MAX_INSTANCES) as BufferAddress,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,

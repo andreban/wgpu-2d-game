@@ -1,18 +1,18 @@
 mod rendering;
 mod shapes;
 
-use winit::dpi::LogicalSize;
 use winit::{
+    dpi::LogicalSize,
     event::*,
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
 };
 
-use crate::rendering::pipelines::squares::square::SquarePipeline;
-use crate::rendering::pipelines::squares::sprite::SpritePipeline;
-use crate::rendering::Render;
-use crate::shapes::{Sprite, Square};
-use rendering::WebGpu;
+use rendering::{
+    pipelines::{SpritePipeline, SquarePipeline},
+    Graphics, Renderer,
+};
+use shapes::{Sprite, Square};
 
 const CANVAS_WIDTH: f32 = 600.0;
 const CANVAS_HEIGHT: f32 = 650.0;
@@ -24,9 +24,9 @@ pub async fn run() {
         .with_inner_size(LogicalSize::new(CANVAS_WIDTH, CANVAS_HEIGHT))
         .build(&event_loop)
         .unwrap();
-    let mut webgpu = WebGpu::new(&window).await;
-    let mut squares_pipeline = SquarePipeline::new(&mut webgpu);
-    let mut sprites_pipeline = SpritePipeline::new(&mut webgpu);
+    let mut graphics = Graphics::new(&window).await;
+    let mut squares_pipeline = SquarePipeline::new(&mut graphics);
+    let mut sprites_pipeline = SpritePipeline::new(&mut graphics);
     let mut sprites = vec![
         Sprite {
             position: (0.0, 0.0).into(),
@@ -58,11 +58,11 @@ pub async fn run() {
                             *control_flow = ControlFlow::Exit;
                         }
                         WindowEvent::Resized(physical_size) => {
-                            webgpu.resize(*physical_size);
+                            graphics.resize(*physical_size);
                         }
                         WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
                             // new_inner_size is &&mut so w have to dereference it twice
-                            webgpu.resize(**new_inner_size);
+                            graphics.resize(**new_inner_size);
                         }
                         WindowEvent::KeyboardInput { input, .. } => match input.virtual_keycode {
                             Some(VirtualKeyCode::Up) => {
@@ -87,10 +87,10 @@ pub async fn run() {
                 if window_id != window.id() {
                     return;
                 }
-                let mut render = webgpu.start_render().unwrap();
-                let mut render_pass = Render::render_pass(&mut render.encoder, &render.view);
-                sprites_pipeline.render(&mut render_pass, &mut render.webgpu.queue, &sprites);
-                squares_pipeline.render(&mut render_pass, &mut render.webgpu.queue, &quads);
+                let mut render = graphics.start_render().unwrap();
+                let mut render_pass = Renderer::render_pass(&mut render.encoder, &render.view);
+                sprites_pipeline.render(&mut render_pass, &mut render.graphics.queue, &sprites);
+                squares_pipeline.render(&mut render_pass, &mut render.graphics.queue, &quads);
                 drop(render_pass);
                 render.draw();
             }

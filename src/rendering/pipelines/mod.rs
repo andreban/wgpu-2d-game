@@ -1,23 +1,43 @@
-use crate::rendering::camera2d::Camera2d;
+use wgpu::VertexAttribute;
 
-pub mod squares;
+mod sprite;
+mod square;
+
+pub use sprite::SpritePipeline;
+pub use square::SquarePipeline;
+
+const SQUARE_VERTICES: &[Vertex] = &[
+    Vertex {
+        position: [0.0, 1.0, 0.0],
+    },
+    Vertex {
+        position: [0.0, 0.0, 0.0],
+    },
+    Vertex {
+        position: [1.0, 1.0, 0.0],
+    },
+    Vertex {
+        position: [1.0, 0.0, 0.0],
+    },
+];
+const SQUARE_INDICES: &[u16] = &[0, 1, 2, 2, 1, 3];
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct CameraUniform {
-    view_proj: [[f32; 4]; 4],
+pub struct Vertex {
+    position: [f32; 3],
 }
 
-impl CameraUniform {
-    pub fn new() -> Self {
-        use cgmath::SquareMatrix;
-        Self {
-            view_proj: cgmath::Matrix4::identity().into(),
+impl Vertex {
+    fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[VertexAttribute {
+                format: wgpu::VertexFormat::Float32x3,
+                offset: 0,
+                shader_location: 0,
+            }],
         }
-    }
-
-    fn update_view_proj(&mut self, camera: &Camera2d) {
-        let matrix = crate::rendering::OPENGL_TO_WGPU_MATRIX * camera.build_matrix();
-        self.view_proj = matrix.into();
     }
 }
