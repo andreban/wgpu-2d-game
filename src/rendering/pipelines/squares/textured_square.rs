@@ -1,9 +1,9 @@
-use cgmath::Matrix4;
-use wgpu::{BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute};
-use wgpu::util::DeviceExt;
 use crate::rendering::camera2d::Camera2d;
-use crate::{Sprite, WebGpu};
 use crate::rendering::texture::Texture;
+use crate::{Sprite, WebGpu};
+use cgmath::Matrix4;
+use wgpu::util::DeviceExt;
+use wgpu::{BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute};
 
 const MAX_INSTANCES: usize = 1000;
 
@@ -58,7 +58,8 @@ impl TexturedSquareInstance {
                 square.size.width,
                 square.size.height,
                 1.0,
-            )).into(),
+            ))
+            .into(),
             texture_coords: square.texture.into(),
         }
     }
@@ -83,27 +84,29 @@ impl<'a> TexturedSquarePipeline {
                 .unwrap();
 
         let texture_bind_group_layout =
-            &webgpu.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Texture {
-                            multisampled: false,
-                            view_dimension: wgpu::TextureViewDimension::D2,
-                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+            &webgpu
+                .device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Texture {
+                                multisampled: false,
+                                view_dimension: wgpu::TextureViewDimension::D2,
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            },
+                            count: None,
                         },
-                        count: None,
-                    },
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: wgpu::ShaderStages::FRAGMENT,
-                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                        count: None,
-                    },
-                ],
-                label: Some("texture_bind_group_layout"),
-            });
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                            count: None,
+                        },
+                    ],
+                    label: Some("texture_bind_group_layout"),
+                });
 
         let diffuse_bind_group = webgpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
             layout: texture_bind_group_layout,
@@ -124,7 +127,9 @@ impl<'a> TexturedSquarePipeline {
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("../../../shaders/textured_square.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    include_str!("../../../shaders/textured_square.wgsl").into(),
+                ),
             });
 
         // Camera Uniform
@@ -264,8 +269,10 @@ impl<'a> TexturedSquarePipeline {
         queue: &mut Queue,
         squares: &[Sprite],
     ) {
-        let instance_data: Vec<TexturedSquareInstance> =
-            squares.iter().map(TexturedSquareInstance::from_square).collect();
+        let instance_data: Vec<TexturedSquareInstance> = squares
+            .iter()
+            .map(TexturedSquareInstance::from_square)
+            .collect();
         queue.write_buffer(
             &self.instance_buffer,
             0,

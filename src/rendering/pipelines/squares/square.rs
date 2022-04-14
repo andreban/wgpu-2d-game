@@ -1,10 +1,8 @@
 use crate::rendering::camera2d::Camera2d;
+use crate::{Square, WebGpu};
 use cgmath::Matrix4;
 use wgpu::util::DeviceExt;
-use wgpu::{
-    BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute,
-};
-use crate::{Square, WebGpu};
+use wgpu::{BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute};
 
 const MAX_INSTANCES: usize = 1000;
 
@@ -81,7 +79,9 @@ impl<'a> SquarePipeline {
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("../../../shaders/square.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    include_str!("../../../shaders/square.wgsl").into(),
+                ),
             });
 
         // Camera Uniform

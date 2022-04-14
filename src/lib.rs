@@ -9,10 +9,10 @@ use winit::{
 };
 
 use crate::rendering::pipelines::squares::square::SquarePipeline;
+use crate::rendering::pipelines::squares::textured_square::TexturedSquarePipeline;
 use crate::rendering::Render;
 use crate::shapes::{Sprite, Square};
 use rendering::WebGpu;
-use crate::rendering::pipelines::squares::textured_square::TexturedSquarePipeline;
 
 const CANVAS_WIDTH: f32 = 600.0;
 const CANVAS_HEIGHT: f32 = 650.0;
@@ -40,13 +40,11 @@ pub async fn run() {
         },
     ];
 
-    let quads = vec![
-        Square {
-            position: (200.0, 200.0).into(),
-            size: (50.0, 50.0).into(),
-            color: (1.0, 0.0, 0.0).into(),
-        },
-    ];
+    let quads = vec![Square {
+        position: (200.0, 200.0).into(),
+        size: (50.0, 50.0).into(),
+        color: (1.0, 0.0, 0.0).into(),
+    }];
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -66,23 +64,21 @@ pub async fn run() {
                             // new_inner_size is &&mut so w have to dereference it twice
                             webgpu.resize(**new_inner_size);
                         }
-                        WindowEvent::KeyboardInput {input, ..} => {
-                            match input.virtual_keycode {
-                                Some(VirtualKeyCode::Up) => {
-                                    sprites[1].position.y += 10.0;
-                                },
-                                Some(VirtualKeyCode::Down) => {
-                                    sprites[1].position.y -= 10.0;
-                                },
-                                Some(VirtualKeyCode::Left) => {
-                                    sprites[1].position.x -= 10.0;
-                                },
-                                Some(VirtualKeyCode::Right) => {
-                                    sprites[1].position.x += 10.0;
-                                },
-                                _ => {}
+                        WindowEvent::KeyboardInput { input, .. } => match input.virtual_keycode {
+                            Some(VirtualKeyCode::Up) => {
+                                sprites[1].position.y += 10.0;
                             }
-                        }
+                            Some(VirtualKeyCode::Down) => {
+                                sprites[1].position.y -= 10.0;
+                            }
+                            Some(VirtualKeyCode::Left) => {
+                                sprites[1].position.x -= 10.0;
+                            }
+                            Some(VirtualKeyCode::Right) => {
+                                sprites[1].position.x += 10.0;
+                            }
+                            _ => {}
+                        },
                         _ => {}
                     }
                 }

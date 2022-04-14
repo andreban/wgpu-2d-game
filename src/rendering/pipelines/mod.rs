@@ -21,4 +21,3 @@ impl CameraUniform {
         self.view_proj = matrix.into();
     }
 }
-
