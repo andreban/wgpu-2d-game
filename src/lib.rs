@@ -11,16 +11,17 @@ use winit::{
 use crate::rendering::pipelines::squares::square::SquarePipeline;
 use crate::rendering::Render;
 use crate::shapes::{Sprite, Square};
-use rendering::pipelines::tutorial3::Tutorial3;
-use rendering::pipelines::tutorial4::Tutorial4Pipeline;
 use rendering::WebGpu;
 use crate::rendering::pipelines::squares::textured_square::TexturedSquarePipeline;
+
+const CANVAS_WIDTH: f32 = 600.0;
+const CANVAS_HEIGHT: f32 = 650.0;
 
 pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_resizable(false)
-        .with_inner_size(LogicalSize::new(600.0, 650.0))
+        .with_inner_size(LogicalSize::new(CANVAS_WIDTH, CANVAS_HEIGHT))
         .build(&event_loop)
         .unwrap();
     let mut webgpu = WebGpu::new(&window).await;
@@ -30,7 +31,7 @@ pub async fn run() {
         Sprite {
             position: (0.0, 0.0).into(),
             size: (600.0, 650.0).into(),
-            texture: (0.0, 0.0, 600.0 / 1162.0, 650.0 / 650.0).into(),
+            texture: (0.0, 0.0, CANVAS_WIDTH / 1162.0, CANVAS_HEIGHT / 650.0).into(),
         },
         Sprite {
             position: (100.0, 100.0).into(),
@@ -39,7 +40,7 @@ pub async fn run() {
         },
     ];
 
-    let mut quads = vec![
+    let quads = vec![
         Square {
             position: (200.0, 200.0).into(),
             size: (50.0, 50.0).into(),
@@ -65,7 +66,7 @@ pub async fn run() {
                             // new_inner_size is &&mut so w have to dereference it twice
                             webgpu.resize(**new_inner_size);
                         }
-                        WindowEvent::KeyboardInput {input, device_id, is_synthetic} => {
+                        WindowEvent::KeyboardInput {input, ..} => {
                             match input.virtual_keycode {
                                 Some(VirtualKeyCode::Up) => {
                                     sprites[1].position.y += 10.0;

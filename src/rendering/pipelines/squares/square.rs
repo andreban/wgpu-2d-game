@@ -1,9 +1,8 @@
 use crate::rendering::camera2d::Camera2d;
 use cgmath::Matrix4;
 use wgpu::util::DeviceExt;
-use wgpu::VertexStepMode::Vertex;
 use wgpu::{
-    BindGroup, BufferAddress, BufferDescriptor, Device, Queue, RenderPass, VertexAttribute,
+    BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute,
 };
 use crate::{Square, WebGpu};
 
@@ -53,7 +52,6 @@ impl SquareInstance {
     }
 
     pub fn from_square(square: &Square) -> Self {
-        use cgmath::SquareMatrix;
         Self {
             color: square.color.into(),
             transform: (Matrix4::from_translation(
@@ -198,7 +196,7 @@ impl<'a> SquarePipeline {
             });
         let num_indices = super::INDICES.len() as u32;
 
-        let mut instance_buffer = webgpu.device.create_buffer(&BufferDescriptor {
+        let instance_buffer = webgpu.device.create_buffer(&BufferDescriptor {
             label: Some("Instance Buffer"),
             size: (std::mem::size_of::<SquareInstance>() * MAX_INSTANCES) as BufferAddress,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
@@ -219,7 +217,7 @@ impl<'a> SquarePipeline {
         &'a mut self,
         render_pass: &mut RenderPass<'a>,
         queue: &mut Queue,
-        squares: &Vec<Square>,
+        squares: &[Square],
     ) {
         let instance_data: Vec<SquareInstance> =
             squares.iter().map(SquareInstance::from_square).collect();

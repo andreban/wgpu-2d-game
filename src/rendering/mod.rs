@@ -110,7 +110,7 @@ impl<'a> Render<'a> {
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = webgpu
+        let encoder = webgpu
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),

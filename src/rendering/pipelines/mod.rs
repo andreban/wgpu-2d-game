@@ -1,8 +1,6 @@
 use crate::rendering::camera2d::Camera2d;
 
 pub mod squares;
-pub mod tutorial3;
-pub mod tutorial4;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]

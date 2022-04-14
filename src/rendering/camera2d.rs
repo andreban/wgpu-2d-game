@@ -1,6 +1,4 @@
-use cgmath::One;
-use cgmath::SquareMatrix;
-use cgmath::{Matrix4, Vector2};
+use cgmath::Vector2;
 use winit::dpi::PhysicalSize;
 
 pub struct Camera2d {

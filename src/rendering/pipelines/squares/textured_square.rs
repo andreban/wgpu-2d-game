@@ -2,7 +2,7 @@ use cgmath::Matrix4;
 use wgpu::{BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute};
 use wgpu::util::DeviceExt;
 use crate::rendering::camera2d::Camera2d;
-use crate::{Sprite, Square, WebGpu};
+use crate::{Sprite, WebGpu};
 use crate::rendering::texture::Texture;
 
 const MAX_INSTANCES: usize = 1000;
@@ -51,7 +51,6 @@ impl TexturedSquareInstance {
     }
 
     pub fn from_square(square: &Sprite) -> Self {
-        use cgmath::SquareMatrix;
         Self {
             transform: (Matrix4::from_translation(
                 (square.position.x, square.position.y, 0.0).into(),
@@ -66,14 +65,14 @@ impl TexturedSquareInstance {
 }
 
 pub struct TexturedSquarePipeline {
-    render_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    instance_buffer: wgpu::Buffer,
-    num_indices: u32,
-    camera_bind_group: BindGroup,
-    diffuse_texture: Texture,
-    diffuse_bind_group: wgpu::BindGroup,
+    pub render_pipeline: wgpu::RenderPipeline,
+    pub vertex_buffer: wgpu::Buffer,
+    pub index_buffer: wgpu::Buffer,
+    pub instance_buffer: wgpu::Buffer,
+    pub num_indices: u32,
+    pub camera_bind_group: BindGroup,
+    pub diffuse_texture: Texture,
+    pub diffuse_bind_group: wgpu::BindGroup,
 }
 
 impl<'a> TexturedSquarePipeline {
@@ -107,7 +106,7 @@ impl<'a> TexturedSquarePipeline {
             });
 
         let diffuse_bind_group = webgpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
+            layout: texture_bind_group_layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
@@ -142,7 +141,7 @@ impl<'a> TexturedSquarePipeline {
             });
 
         let camera_bind_group_layout =
-            webgpu
+            &webgpu
                 .device
                 .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                     entries: &[wgpu::BindGroupLayoutEntry {
@@ -159,7 +158,7 @@ impl<'a> TexturedSquarePipeline {
                 });
 
         let camera_bind_group = webgpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &camera_bind_group_layout,
+            layout: camera_bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
                 resource: camera_buffer.as_entire_binding(),
@@ -173,7 +172,7 @@ impl<'a> TexturedSquarePipeline {
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[&camera_bind_group_layout, &texture_bind_group_layout],
+                    bind_group_layouts: &[camera_bind_group_layout, texture_bind_group_layout],
                     push_constant_ranges: &[],
                 });
 
@@ -240,7 +239,7 @@ impl<'a> TexturedSquarePipeline {
             });
         let num_indices = super::INDICES.len() as u32;
 
-        let mut instance_buffer = webgpu.device.create_buffer(&BufferDescriptor {
+        let instance_buffer = webgpu.device.create_buffer(&BufferDescriptor {
             label: Some("Instance Buffer"),
             size: (std::mem::size_of::<TexturedSquareInstance>() * MAX_INSTANCES) as BufferAddress,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
@@ -263,7 +262,7 @@ impl<'a> TexturedSquarePipeline {
         &'a mut self,
         render_pass: &mut RenderPass<'a>,
         queue: &mut Queue,
-        squares: &Vec<Sprite>,
+        squares: &[Sprite],
     ) {
         let instance_data: Vec<TexturedSquareInstance> =
             squares.iter().map(TexturedSquareInstance::from_square).collect();
