@@ -142,7 +142,7 @@ impl<'a> SquarePipeline {
                     vertex: wgpu::VertexState {
                         module: &shader,
                         entry_point: "vs_main",
-                        buffers: &[super::SquareVertex::desc(), SquareInstance::desc()],
+                        buffers: &[super::Vertex::desc(), SquareInstance::desc()],
                     },
                     fragment: Some(wgpu::FragmentState {
                         module: &shader,

@@ -9,7 +9,7 @@ use winit::{
 };
 
 use crate::rendering::pipelines::squares::square::SquarePipeline;
-use crate::rendering::pipelines::squares::textured_square::TexturedSquarePipeline;
+use crate::rendering::pipelines::squares::sprite::SpritePipeline;
 use crate::rendering::Render;
 use crate::shapes::{Sprite, Square};
 use rendering::WebGpu;
@@ -25,8 +25,8 @@ pub async fn run() {
         .build(&event_loop)
         .unwrap();
     let mut webgpu = WebGpu::new(&window).await;
-    let mut quads_pipeline = SquarePipeline::new(&mut webgpu);
-    let mut sprites_pipeline = TexturedSquarePipeline::new(&mut webgpu);
+    let mut squares_pipeline = SquarePipeline::new(&mut webgpu);
+    let mut sprites_pipeline = SpritePipeline::new(&mut webgpu);
     let mut sprites = vec![
         Sprite {
             position: (0.0, 0.0).into(),
@@ -90,7 +90,7 @@ pub async fn run() {
                 let mut render = webgpu.start_render().unwrap();
                 let mut render_pass = Render::render_pass(&mut render.encoder, &render.view);
                 sprites_pipeline.render(&mut render_pass, &mut render.webgpu.queue, &sprites);
-                quads_pipeline.render(&mut render_pass, &mut render.webgpu.queue, &quads);
+                squares_pipeline.render(&mut render_pass, &mut render.webgpu.queue, &quads);
                 drop(render_pass);
                 render.draw();
             }

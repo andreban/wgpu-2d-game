@@ -9,16 +9,16 @@ const MAX_INSTANCES: usize = 1000;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct TexturedSquareInstance {
+pub struct SpriteInstance {
     transform: [[f32; 4]; 4],
     texture_coords: [f32; 4],
 }
 
-impl TexturedSquareInstance {
+impl SpriteInstance {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         use std::mem;
         wgpu::VertexBufferLayout {
-            array_stride: mem::size_of::<TexturedSquareInstance>() as wgpu::BufferAddress,
+            array_stride: mem::size_of::<SpriteInstance>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
                 VertexAttribute {
@@ -50,22 +50,22 @@ impl TexturedSquareInstance {
         }
     }
 
-    pub fn from_square(square: &Sprite) -> Self {
+    pub fn from_sprite(sprite: &Sprite) -> Self {
         Self {
             transform: (Matrix4::from_translation(
-                (square.position.x, square.position.y, 0.0).into(),
+                (sprite.position.x, sprite.position.y, 0.0).into(),
             ) * Matrix4::from_nonuniform_scale(
-                square.size.width,
-                square.size.height,
+                sprite.size.width,
+                sprite.size.height,
                 1.0,
             ))
             .into(),
-            texture_coords: square.texture.into(),
+            texture_coords: sprite.texture.into(),
         }
     }
 }
 
-pub struct TexturedSquarePipeline {
+pub struct SpritePipeline {
     pub render_pipeline: wgpu::RenderPipeline,
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
@@ -76,7 +76,7 @@ pub struct TexturedSquarePipeline {
     pub diffuse_bind_group: wgpu::BindGroup,
 }
 
-impl<'a> TexturedSquarePipeline {
+impl<'a> SpritePipeline {
     pub fn new(webgpu: &mut WebGpu) -> Self {
         let diffuse_bytes = include_bytes!("../../../assets/texture.png");
         let diffuse_texture =
@@ -128,7 +128,7 @@ impl<'a> TexturedSquarePipeline {
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
                 source: wgpu::ShaderSource::Wgsl(
-                    include_str!("../../../shaders/textured_square.wgsl").into(),
+                    include_str!("../../../shaders/sprite.wgsl").into(),
                 ),
             });
 
@@ -190,7 +190,7 @@ impl<'a> TexturedSquarePipeline {
                     vertex: wgpu::VertexState {
                         module: &shader,
                         entry_point: "vs_main",
-                        buffers: &[super::SquareVertex::desc(), TexturedSquareInstance::desc()],
+                        buffers: &[super::Vertex::desc(), SpriteInstance::desc()],
                     },
                     fragment: Some(wgpu::FragmentState {
                         module: &shader,
@@ -246,7 +246,7 @@ impl<'a> TexturedSquarePipeline {
 
         let instance_buffer = webgpu.device.create_buffer(&BufferDescriptor {
             label: Some("Instance Buffer"),
-            size: (std::mem::size_of::<TexturedSquareInstance>() * MAX_INSTANCES) as BufferAddress,
+            size: (std::mem::size_of::<SpriteInstance>() * MAX_INSTANCES) as BufferAddress,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -267,11 +267,11 @@ impl<'a> TexturedSquarePipeline {
         &'a mut self,
         render_pass: &mut RenderPass<'a>,
         queue: &mut Queue,
-        squares: &[Sprite],
+        sprites: &[Sprite],
     ) {
-        let instance_data: Vec<TexturedSquareInstance> = squares
+        let instance_data: Vec<SpriteInstance> = sprites
             .iter()
-            .map(TexturedSquareInstance::from_square)
+            .map(SpriteInstance::from_sprite)
             .collect();
         queue.write_buffer(
             &self.instance_buffer,
