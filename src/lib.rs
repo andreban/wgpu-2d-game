@@ -1,3 +1,4 @@
+mod input;
 mod rendering;
 mod shapes;
 
@@ -8,6 +9,7 @@ use winit::{
     window::WindowBuilder,
 };
 
+use input::InputHandler;
 use rendering::{
     pipelines::{SpritePipeline, SquarePipeline},
     Graphics, Renderer,
@@ -24,6 +26,7 @@ pub async fn run() {
         .with_inner_size(LogicalSize::new(CANVAS_WIDTH, CANVAS_HEIGHT))
         .build(&event_loop)
         .unwrap();
+    let mut input_handler = InputHandler::new();
     let mut graphics = Graphics::new(&window).await;
     let mut squares_pipeline = SquarePipeline::new(&mut graphics);
     let mut sprites_pipeline = SpritePipeline::new(&mut graphics);
@@ -64,21 +67,7 @@ pub async fn run() {
                             // new_inner_size is &&mut so w have to dereference it twice
                             graphics.resize(**new_inner_size);
                         }
-                        WindowEvent::KeyboardInput { input, .. } => match input.virtual_keycode {
-                            Some(VirtualKeyCode::Up) => {
-                                sprites[1].position.y += 10.0;
-                            }
-                            Some(VirtualKeyCode::Down) => {
-                                sprites[1].position.y -= 10.0;
-                            }
-                            Some(VirtualKeyCode::Left) => {
-                                sprites[1].position.x -= 10.0;
-                            }
-                            Some(VirtualKeyCode::Right) => {
-                                sprites[1].position.x += 10.0;
-                            }
-                            _ => {}
-                        },
+                        WindowEvent::KeyboardInput { input, .. } => input_handler.update(input),
                         _ => {}
                     }
                 }
@@ -87,6 +76,25 @@ pub async fn run() {
                 if window_id != window.id() {
                     return;
                 }
+
+                // Update game
+                if input_handler.up_pressed {
+                    sprites[1].position.y += 1.0;
+                }
+
+                if input_handler.down_pressed {
+                    sprites[1].position.y -= 1.0;
+                }
+
+                if input_handler.left_pressed {
+                    sprites[1].position.x -= 1.0;
+                }
+
+                if input_handler.right_pressed {
+                    sprites[1].position.x += 1.0;
+                }
+
+                // Render game
                 let mut render = graphics.start_render().unwrap();
                 let mut render_pass = Renderer::render_pass(&mut render.encoder, &render.view);
                 sprites_pipeline.render(&mut render_pass, &mut render.graphics.queue, &sprites);
