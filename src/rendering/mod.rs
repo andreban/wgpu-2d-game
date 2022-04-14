@@ -1,5 +1,6 @@
 pub mod camera2d;
 pub mod pipelines;
+pub mod texture;
 
 use std::iter;
 use wgpu::{
@@ -8,6 +9,14 @@ use wgpu::{
 };
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
+
+#[rustfmt::skip]
+pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 0.5, 0.0,
+    0.0, 0.0, 0.5, 1.0,
+);
 
 pub struct WebGpu {
     pub size: PhysicalSize<u32>,

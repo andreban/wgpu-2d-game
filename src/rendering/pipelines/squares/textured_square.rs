@@ -1,78 +1,48 @@
-use crate::rendering::camera2d::Camera2d;
-use crate::{Square, WebGpu};
 use cgmath::Matrix4;
+use wgpu::{BindGroup, BufferAddress, BufferDescriptor, Queue, RenderPass, VertexAttribute};
 use wgpu::util::DeviceExt;
-use wgpu::VertexStepMode::Vertex;
-use wgpu::{
-    BindGroup, BufferAddress, BufferDescriptor, Device, Queue, RenderPass, VertexAttribute,
-};
+use crate::rendering::camera2d::Camera2d;
+use crate::{Sprite, Square, WebGpu};
+use crate::rendering::texture::Texture;
 
 const MAX_INSTANCES: usize = 1000;
 
-#[rustfmt::skip]
-pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
-    1.0, 0.0, 0.0, 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 0.5, 0.0,
-    0.0, 0.0, 0.5, 1.0,
-);
-
-const VERTICES: &[SquareVertex] = &[
-    SquareVertex {
-        position: [0.0, 1.0, 0.0],
-    },
-    SquareVertex {
-        position: [0.0, 0.0, 0.0],
-    },
-    SquareVertex {
-        position: [1.0, 1.0, 0.0],
-    },
-    SquareVertex {
-        position: [1.0, 0.0, 0.0],
-    },
-];
-const INDICES: &[u16] = &[0, 1, 2, 2, 1, 3];
-const COLOR: ColorUniform = ColorUniform {
-    color: [1.0, 1.0, 0.0],
-    filler: 0.0,
-};
-
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct SquareInstance {
-    color: [f32; 3],
+pub struct TexturedSquareInstance {
     transform: [[f32; 4]; 4],
+    texture_coords: [f32; 4],
 }
 
-impl SquareInstance {
+impl TexturedSquareInstance {
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
         use std::mem;
         wgpu::VertexBufferLayout {
-            array_stride: mem::size_of::<SquareInstance>() as wgpu::BufferAddress,
+            array_stride: mem::size_of::<TexturedSquareInstance>() as wgpu::BufferAddress,
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &[
                 VertexAttribute {
                     offset: 0,
                     shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x3,
+                    format: wgpu::VertexFormat::Float32x4,
                 },
                 VertexAttribute {
-                    offset: mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    offset: mem::size_of::<[f32; 4]>() as wgpu::BufferAddress,
                     shader_location: 2,
                     format: wgpu::VertexFormat::Float32x4,
                 },
                 VertexAttribute {
-                    offset: mem::size_of::<[f32; 7]>() as wgpu::BufferAddress,
+                    offset: mem::size_of::<[f32; 8]>() as wgpu::BufferAddress,
                     shader_location: 3,
                     format: wgpu::VertexFormat::Float32x4,
                 },
                 VertexAttribute {
-                    offset: mem::size_of::<[f32; 11]>() as wgpu::BufferAddress,
+                    offset: mem::size_of::<[f32; 12]>() as wgpu::BufferAddress,
                     shader_location: 4,
                     format: wgpu::VertexFormat::Float32x4,
                 },
                 VertexAttribute {
-                    offset: mem::size_of::<[f32; 15]>() as wgpu::BufferAddress,
+                    offset: mem::size_of::<[f32; 16]>() as wgpu::BufferAddress,
                     shader_location: 5,
                     format: wgpu::VertexFormat::Float32x4,
                 },
@@ -80,91 +50,87 @@ impl SquareInstance {
         }
     }
 
-    pub fn from_square(square: &Square) -> Self {
+    pub fn from_square(square: &Sprite) -> Self {
         use cgmath::SquareMatrix;
         Self {
-            color: square.color.into(),
             transform: (Matrix4::from_translation(
                 (square.position.x, square.position.y, 0.0).into(),
             ) * Matrix4::from_nonuniform_scale(
                 square.size.width,
                 square.size.height,
                 1.0,
-            ))
-            .into(),
+            )).into(),
+            texture_coords: square.texture.into(),
         }
     }
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct CameraUniform {
-    view_proj: [[f32; 4]; 4],
-}
-
-impl CameraUniform {
-    pub fn new() -> Self {
-        use cgmath::SquareMatrix;
-        Self {
-            view_proj: cgmath::Matrix4::identity().into(),
-        }
-    }
-
-    fn update_view_proj(&mut self, camera: &Camera2d) {
-        let matrix = OPENGL_TO_WGPU_MATRIX * camera.build_matrix();
-        println!("{:?}", matrix);
-        self.view_proj = matrix.into();
-    }
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct SquareVertex {
-    position: [f32; 3],
-}
-
-impl SquareVertex {
-    fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
-        wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<SquareVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[VertexAttribute {
-                format: wgpu::VertexFormat::Float32x3,
-                offset: 0,
-                shader_location: 0,
-            }],
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct ColorUniform {
-    color: [f32; 3],
-    filler: f32,
-}
-
-pub struct SquarePipeline {
+pub struct TexturedSquarePipeline {
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     instance_buffer: wgpu::Buffer,
     num_indices: u32,
     camera_bind_group: BindGroup,
+    diffuse_texture: Texture,
+    diffuse_bind_group: wgpu::BindGroup,
 }
 
-impl<'a> SquarePipeline {
+impl<'a> TexturedSquarePipeline {
     pub fn new(webgpu: &mut WebGpu) -> Self {
+        let diffuse_bytes = include_bytes!("../../../assets/texture.png");
+        let diffuse_texture =
+            Texture::from_bytes(&webgpu.device, &webgpu.queue, diffuse_bytes, "texture.png")
+                .unwrap();
+
+        let texture_bind_group_layout =
+            &webgpu.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
+
+        let diffuse_bind_group = webgpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &texture_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&diffuse_texture.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&diffuse_texture.sampler),
+                },
+            ],
+            label: Some("diffuse_bind_group"),
+        });
+
         let shader = webgpu
             .device
             .create_shader_module(&wgpu::ShaderModuleDescriptor {
                 label: Some("Shader"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("../../shaders/square.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(include_str!("../../../shaders/textured_square.wgsl").into()),
             });
 
         // Camera Uniform
         let camera2d = Camera2d::new(600.0, 650.0);
-        let mut camera_uniform = CameraUniform::new();
+        let mut camera_uniform = crate::rendering::pipelines::CameraUniform::new();
         camera_uniform.update_view_proj(&camera2d);
 
         let camera_buffer = webgpu
@@ -207,7 +173,7 @@ impl<'a> SquarePipeline {
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: Some("Render Pipeline Layout"),
-                    bind_group_layouts: &[&camera_bind_group_layout],
+                    bind_group_layouts: &[&camera_bind_group_layout, &texture_bind_group_layout],
                     push_constant_ranges: &[],
                 });
 
@@ -220,7 +186,7 @@ impl<'a> SquarePipeline {
                     vertex: wgpu::VertexState {
                         module: &shader,
                         entry_point: "vs_main",
-                        buffers: &[SquareVertex::desc(), SquareInstance::desc()],
+                        buffers: &[super::SquareVertex::desc(), TexturedSquareInstance::desc()],
                     },
                     fragment: Some(wgpu::FragmentState {
                         module: &shader,
@@ -228,7 +194,7 @@ impl<'a> SquarePipeline {
                         targets: &[wgpu::ColorTargetState {
                             format: webgpu.configuration.format,
                             blend: Some(wgpu::BlendState {
-                                color: wgpu::BlendComponent::REPLACE,
+                                color: wgpu::BlendComponent::OVER,
                                 alpha: wgpu::BlendComponent::REPLACE,
                             }),
                             write_mask: wgpu::ColorWrites::ALL,
@@ -262,21 +228,21 @@ impl<'a> SquarePipeline {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(VERTICES),
+                contents: bytemuck::cast_slice(super::VERTICES),
                 usage: wgpu::BufferUsages::VERTEX,
             });
         let index_buffer = webgpu
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(INDICES),
+                contents: bytemuck::cast_slice(super::INDICES),
                 usage: wgpu::BufferUsages::INDEX,
             });
-        let num_indices = INDICES.len() as u32;
+        let num_indices = super::INDICES.len() as u32;
 
         let mut instance_buffer = webgpu.device.create_buffer(&BufferDescriptor {
             label: Some("Instance Buffer"),
-            size: (std::mem::size_of::<SquareInstance>() * MAX_INSTANCES) as BufferAddress,
+            size: (std::mem::size_of::<TexturedSquareInstance>() * MAX_INSTANCES) as BufferAddress,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -288,6 +254,8 @@ impl<'a> SquarePipeline {
             instance_buffer,
             num_indices,
             camera_bind_group,
+            diffuse_texture,
+            diffuse_bind_group,
         }
     }
 
@@ -295,11 +263,10 @@ impl<'a> SquarePipeline {
         &'a mut self,
         render_pass: &mut RenderPass<'a>,
         queue: &mut Queue,
-        squares: &Vec<Square>,
+        squares: &Vec<Sprite>,
     ) {
-        let instance_data: Vec<SquareInstance> =
-            squares.iter().map(SquareInstance::from_square).collect();
-        // let instance_data = vec![SquareInstance::from_square(quad)];
+        let instance_data: Vec<TexturedSquareInstance> =
+            squares.iter().map(TexturedSquareInstance::from_square).collect();
         queue.write_buffer(
             &self.instance_buffer,
             0,
@@ -308,6 +275,7 @@ impl<'a> SquarePipeline {
 
         render_pass.set_pipeline(&self.render_pipeline);
         render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
+        render_pass.set_bind_group(1, &self.diffuse_bind_group, &[]);
         render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
         render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
