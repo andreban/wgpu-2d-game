@@ -12,7 +12,7 @@ use winit::{
 use input::InputHandler;
 use rendering::{
     pipelines::{SpritePipeline, SquarePipeline},
-    Graphics, Renderer,
+    Graphics,
 };
 use shapes::{Sprite, Square};
 
@@ -28,16 +28,6 @@ pub async fn run() {
         .unwrap();
     let mut input_handler = InputHandler::new();
     let mut graphics = Graphics::new(&window).await;
-    let mut squares_pipeline = SquarePipeline::new(
-        &mut graphics.device,
-        &mut graphics.queue,
-        &graphics.configuration,
-    );
-    let mut sprites_pipeline = SpritePipeline::new(
-        &mut graphics.device,
-        &mut graphics.queue,
-        &graphics.configuration,
-    );
     let mut sprites = vec![
         Sprite {
             position: (0.0, 0.0).into(),
@@ -103,12 +93,7 @@ pub async fn run() {
                 }
 
                 // Render game
-                let mut render = graphics.start_render().unwrap();
-                let mut render_pass = Renderer::render_pass(&mut render.encoder, &render.view);
-                sprites_pipeline.render(&mut render_pass, &mut render.graphics.queue, &sprites);
-                squares_pipeline.render(&mut render_pass, &mut render.graphics.queue, &quads);
-                drop(render_pass);
-                render.draw();
+                graphics.render(&quads, &sprites).unwrap();
             }
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually

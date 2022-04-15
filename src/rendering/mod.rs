@@ -2,11 +2,9 @@ pub mod camera;
 pub mod pipelines;
 pub mod texture;
 
+use crate::{Sprite, SpritePipeline, Square, SquarePipeline};
 use std::iter;
-use wgpu::{
-    Adapter, CommandEncoder, Device, Instance, Queue, RenderPass, Surface, SurfaceConfiguration,
-    SurfaceTexture, TextureView,
-};
+use wgpu::{Adapter, Device, Instance, Queue, Surface, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
@@ -26,6 +24,8 @@ pub struct Graphics {
     pub device: Device,
     pub queue: Queue,
     pub configuration: SurfaceConfiguration,
+    pub square_pipeline: SquarePipeline,
+    pub sprite_pipeline: SpritePipeline,
 }
 
 impl Graphics {
@@ -49,7 +49,7 @@ impl Graphics {
             .unwrap();
 
         // Request a device.
-        let (device, queue) = adapter
+        let (mut device, mut queue) = adapter
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
@@ -62,14 +62,17 @@ impl Graphics {
             .unwrap();
 
         // Create the configuration.
-        let config = wgpu::SurfaceConfiguration {
+        let configuration = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface.get_preferred_format(&adapter).unwrap(),
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
-        surface.configure(&device, &config);
+        surface.configure(&device, &configuration);
+
+        let square_pipeline = SquarePipeline::new(&mut device, &mut queue, &configuration);
+        let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration);
 
         Graphics {
             size,
@@ -78,7 +81,9 @@ impl Graphics {
             adapter,
             device,
             queue,
-            configuration: config,
+            configuration,
+            square_pipeline,
+            sprite_pipeline,
         }
     }
 
@@ -91,43 +96,23 @@ impl Graphics {
         }
     }
 
-    pub fn start_render(&mut self) -> Result<Renderer, wgpu::SurfaceError> {
-        Renderer::new(self)
-    }
-}
-
-pub struct Renderer<'a> {
-    pub output: SurfaceTexture,
-    pub view: TextureView,
-    pub encoder: CommandEncoder,
-    pub graphics: &'a mut Graphics,
-}
-
-impl<'a> Renderer<'a> {
-    fn new(graphics: &'a mut Graphics) -> Result<Self, wgpu::SurfaceError> {
-        let output = graphics.surface.get_current_texture()?;
-        let view = output
+    pub fn render(
+        &mut self,
+        squares: &[Square],
+        sprites: &[Sprite],
+    ) -> Result<(), wgpu::SurfaceError> {
+        // Setup render.
+        let output = self.surface.get_current_texture()?;
+        let view = &output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let encoder = graphics
+        let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
 
-        Ok(Renderer {
-            output,
-            view,
-            encoder,
-            graphics,
-        })
-    }
-
-    pub fn render_pass<'b>(
-        encoder: &'b mut CommandEncoder,
-        view: &'b TextureView,
-    ) -> RenderPass<'b> {
-        encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
             color_attachments: &[wgpu::RenderPassColorAttachment {
                 view,
@@ -143,13 +128,18 @@ impl<'a> Renderer<'a> {
                 },
             }],
             depth_stencil_attachment: None,
-        })
-    }
+        });
 
-    pub fn draw(self) {
-        self.graphics
-            .queue
-            .submit(iter::once(self.encoder.finish()));
-        self.output.present();
+        // Render pipelines.
+        self.sprite_pipeline
+            .render(&mut render_pass, &mut self.queue, sprites);
+        self.square_pipeline
+            .render(&mut render_pass, &mut self.queue, squares);
+
+        // Submit to screen.
+        drop(render_pass);
+        self.queue.submit(iter::once(encoder.finish()));
+        output.present();
+        Ok(())
     }
 }
