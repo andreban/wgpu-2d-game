@@ -2,11 +2,12 @@ pub mod camera;
 pub mod pipelines;
 pub mod texture;
 
-use crate::{Sprite, SpritePipeline, Square, SquarePipeline};
+use crate::{Sprite, Square};
 use std::iter;
 use wgpu::{Adapter, Device, Instance, Queue, Surface, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
+use pipelines::{SquarePipeline, SpritePipeline};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
@@ -98,8 +99,8 @@ impl Graphics {
 
     pub fn render(
         &mut self,
-        squares: &[Square],
-        sprites: &[Sprite],
+        squares: &[&Square],
+        sprites: &[&Sprite],
     ) -> Result<(), wgpu::SurfaceError> {
         // Setup render.
         let output = self.surface.get_current_texture()?;

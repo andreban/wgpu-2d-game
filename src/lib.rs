@@ -1,6 +1,7 @@
 mod input;
 mod rendering;
 mod shapes;
+mod game;
 
 use winit::{
     dpi::LogicalSize,
@@ -10,42 +11,21 @@ use winit::{
 };
 
 use input::InputState;
-use rendering::{
-    pipelines::{SpritePipeline, SquarePipeline},
-    Graphics,
-};
+use rendering::Graphics;
 use shapes::{Sprite, Square};
-
-const CANVAS_WIDTH: f32 = 600.0;
-const CANVAS_HEIGHT: f32 = 650.0;
+use game::BombJackGame;
 
 pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_resizable(false)
-        .with_inner_size(LogicalSize::new(CANVAS_WIDTH, CANVAS_HEIGHT))
+        .with_inner_size(LogicalSize::new(game::CANVAS_WIDTH, game::CANVAS_HEIGHT))
         .build(&event_loop)
         .unwrap();
+
     let mut input_state = InputState::new();
     let mut graphics = Graphics::new(&window).await;
-    let mut sprites = vec![
-        Sprite {
-            position: (0.0, 0.0).into(),
-            size: (600.0, 650.0).into(),
-            texture: (0.0, 0.0, CANVAS_WIDTH / 1162.0, CANVAS_HEIGHT / 650.0).into(),
-        },
-        Sprite {
-            position: (100.0, 100.0).into(),
-            size: (39.0, 45.0).into(),
-            texture: (601.0 / 1162.0, 256.0 / 650.0, 639.0 / 1162.0, 301.0 / 650.0).into(),
-        },
-    ];
-
-    let quads = vec![Square {
-        position: (200.0, 200.0).into(),
-        size: (50.0, 50.0).into(),
-        color: (1.0, 0.0, 0.0).into(),
-    }];
+    let mut game = BombJackGame::new();
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -74,26 +54,11 @@ pub async fn run() {
                 if window_id != window.id() {
                     return;
                 }
-
-                // Update game
-                if input_state.up_pressed {
-                    sprites[1].position.y += 1.0;
-                }
-
-                if input_state.down_pressed {
-                    sprites[1].position.y -= 1.0;
-                }
-
-                if input_state.left_pressed {
-                    sprites[1].position.x -= 1.0;
-                }
-
-                if input_state.right_pressed {
-                    sprites[1].position.x += 1.0;
-                }
+                // Update game state.
+                game.update(&input_state);
 
                 // Render game
-                graphics.render(&quads, &sprites).unwrap();
+                graphics.render(&[], &[&game.background, &game.jack]).unwrap();
             }
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
