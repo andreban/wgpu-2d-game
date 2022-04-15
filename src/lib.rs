@@ -28,8 +28,16 @@ pub async fn run() {
         .unwrap();
     let mut input_handler = InputHandler::new();
     let mut graphics = Graphics::new(&window).await;
-    let mut squares_pipeline = SquarePipeline::new(&mut graphics);
-    let mut sprites_pipeline = SpritePipeline::new(&mut graphics);
+    let mut squares_pipeline = SquarePipeline::new(
+        &mut graphics.device,
+        &mut graphics.queue,
+        &graphics.configuration,
+    );
+    let mut sprites_pipeline = SpritePipeline::new(
+        &mut graphics.device,
+        &mut graphics.queue,
+        &graphics.configuration,
+    );
     let mut sprites = vec![
         Sprite {
             position: (0.0, 0.0).into(),
