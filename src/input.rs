@@ -1,13 +1,13 @@
 use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
 
-pub struct InputHandler {
+pub struct InputState {
     pub up_pressed: bool,
     pub down_pressed: bool,
     pub left_pressed: bool,
     pub right_pressed: bool,
 }
 
-impl InputHandler {
+impl InputState {
     pub fn new() -> Self {
         Self {
             up_pressed: false,

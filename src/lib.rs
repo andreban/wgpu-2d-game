@@ -9,7 +9,7 @@ use winit::{
     window::WindowBuilder,
 };
 
-use input::InputHandler;
+use input::InputState;
 use rendering::{
     pipelines::{SpritePipeline, SquarePipeline},
     Graphics,
@@ -26,7 +26,7 @@ pub async fn run() {
         .with_inner_size(LogicalSize::new(CANVAS_WIDTH, CANVAS_HEIGHT))
         .build(&event_loop)
         .unwrap();
-    let mut input_handler = InputHandler::new();
+    let mut input_state = InputState::new();
     let mut graphics = Graphics::new(&window).await;
     let mut sprites = vec![
         Sprite {
@@ -65,7 +65,7 @@ pub async fn run() {
                             // new_inner_size is &&mut so w have to dereference it twice
                             graphics.resize(**new_inner_size);
                         }
-                        WindowEvent::KeyboardInput { input, .. } => input_handler.update(input),
+                        WindowEvent::KeyboardInput { input, .. } => input_state.update(input),
                         _ => {}
                     }
                 }
@@ -76,19 +76,19 @@ pub async fn run() {
                 }
 
                 // Update game
-                if input_handler.up_pressed {
+                if input_state.up_pressed {
                     sprites[1].position.y += 1.0;
                 }
 
-                if input_handler.down_pressed {
+                if input_state.down_pressed {
                     sprites[1].position.y -= 1.0;
                 }
 
-                if input_handler.left_pressed {
+                if input_state.left_pressed {
                     sprites[1].position.x -= 1.0;
                 }
 
-                if input_handler.right_pressed {
+                if input_state.right_pressed {
                     sprites[1].position.x += 1.0;
                 }
 
