@@ -3,11 +3,11 @@ pub mod pipelines;
 pub mod texture;
 
 use crate::{Sprite, Square};
+use pipelines::{SpritePipeline, SquarePipeline};
 use std::iter;
 use wgpu::{Adapter, Device, Instance, Queue, Surface, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
-use pipelines::{SquarePipeline, SpritePipeline};
 
 #[rustfmt::skip]
 pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(

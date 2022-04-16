@@ -1,7 +1,7 @@
+mod game;
 mod input;
 mod rendering;
 mod shapes;
-mod game;
 
 use winit::{
     dpi::LogicalSize,
@@ -10,10 +10,10 @@ use winit::{
     window::WindowBuilder,
 };
 
+use game::BombJackGame;
 use input::InputState;
 use rendering::Graphics;
 use shapes::{Sprite, Square};
-use game::BombJackGame;
 
 pub async fn run() {
     let event_loop = EventLoop::new();
@@ -58,7 +58,9 @@ pub async fn run() {
                 game.update(&input_state);
 
                 // Render game
-                graphics.render(&[], &[&game.background, &game.jack]).unwrap();
+                graphics
+                    .render(&[], &[&game.background, &game.jack])
+                    .unwrap();
             }
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually

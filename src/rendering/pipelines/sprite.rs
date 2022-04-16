@@ -257,8 +257,10 @@ impl<'a> SpritePipeline {
         queue: &mut Queue,
         sprites: &[&Sprite],
     ) {
-        let instance_data: Vec<SpriteInstance> =
-            sprites.iter().map(|s|SpriteInstance::from_sprite(*s)).collect();
+        let instance_data: Vec<SpriteInstance> = sprites
+            .iter()
+            .map(|s| SpriteInstance::from_sprite(*s))
+            .collect();
         queue.write_buffer(
             &self.instance_buffer,
             0,
