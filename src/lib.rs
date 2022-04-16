@@ -59,15 +59,18 @@ pub async fn run() {
 
                 // Render game
                 graphics
-                    .render(&[], &[
-                        &game.background,
-                        &game.platforms[0],
-                        &game.platforms[1],
-                        &game.platforms[2],
-                        &game.platforms[3],
-                        &game.platforms[4],
-                        &game.jack,
-                    ])
+                    .render(
+                        &[],
+                        &[
+                            &game.background,
+                            &game.platforms[0],
+                            &game.platforms[1],
+                            &game.platforms[2],
+                            &game.platforms[3],
+                            &game.platforms[4],
+                            &game.jack,
+                        ],
+                    )
                     .unwrap();
             }
             Event::MainEventsCleared => {
