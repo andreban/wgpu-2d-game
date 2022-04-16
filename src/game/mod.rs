@@ -1,6 +1,9 @@
+mod jack;
+
 use crate::{InputState, Sprite};
 use cgmath::{Vector2, Vector4};
 use winit::dpi::LogicalSize;
+use jack::Jack;
 
 pub const CANVAS_WIDTH: f32 = 600.0;
 pub const CANVAS_HEIGHT: f32 = 650.0;
@@ -36,7 +39,7 @@ pub struct Rect {
 
 pub struct BombJackGame {
     pub background: Sprite,
-    pub jack: Sprite,
+    pub jack: Jack,
     pub game_bounds: Rect,
     pub platforms: Vec<Sprite>,
     jump_frames: u32,
@@ -51,7 +54,7 @@ impl BombJackGame {
                 size: (600.0, 650.0).into(),
                 texture: texture_atlas.texture_coord(0.0, 0.0, CANVAS_WIDTH, CANVAS_HEIGHT),
             },
-            jack: Sprite {
+            jack: Jack {
                 position: (300.0, 300.0).into(),
                 size: (39.0, 45.0).into(),
                 // Add 0.5 to X, to avoid a red line showing sometimes to the left of jack.

@@ -68,7 +68,7 @@ pub async fn run() {
                             &game.platforms[2],
                             &game.platforms[3],
                             &game.platforms[4],
-                            &game.jack,
+                            &(&game.jack).into(),
                         ],
                     )
                     .unwrap();
