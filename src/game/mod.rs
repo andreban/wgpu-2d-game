@@ -1,14 +1,44 @@
 mod bomb;
 mod jack;
 
+use crate::game::jack::Direction;
 use crate::{InputState, Sprite};
 use bomb::Bomb;
 use cgmath::{Vector2, Vector4};
 use jack::Jack;
+use std::time::{Duration, Instant};
 use winit::dpi::LogicalSize;
 
 pub const CANVAS_WIDTH: f32 = 600.0;
 pub const CANVAS_HEIGHT: f32 = 650.0;
+
+pub struct Animation {
+    frames: Vec<Vector4<f32>>,
+    current_frame: usize,
+}
+
+impl Animation {
+    pub fn new(frames: Vec<Vector4<f32>>) -> Self {
+        Self {
+            frames,
+            current_frame: 0,
+        }
+    }
+
+    pub fn next_frame(&mut self) -> Vector4<f32> {
+        let frame = self.frames[self.current_frame];
+        self.current_frame = if self.current_frame == self.frames.len() - 1 {
+            0
+        } else {
+            self.current_frame + 1
+        };
+        frame
+    }
+
+    pub fn current_frame(&self) -> Vector4<f32> {
+        self.frames[self.current_frame]
+    }
+}
 
 pub struct TextureHelper {
     size: LogicalSize<f32>,
@@ -43,6 +73,8 @@ pub struct BombJackGame {
     pub game_bounds: Rect,
     pub platforms: Vec<Sprite>,
     pub bombs: Vec<Bomb>,
+    last_update: Instant,
+    frame: u32,
 }
 
 impl BombJackGame {
@@ -54,13 +86,7 @@ impl BombJackGame {
                 size: (600.0, 650.0).into(),
                 texture: texture_helper.texture_coord(0.0, 0.0, CANVAS_WIDTH, CANVAS_HEIGHT),
             },
-            jack: Jack {
-                position: (300.0, 300.0).into(),
-                size: (39.0, 45.0).into(),
-                // Add 0.5 to X, to avoid a red line showing sometimes to the left of jack.
-                texture: texture_helper.texture_coord(600.5, 256.0, 39.0, 45.0),
-                thrust: 0.0,
-            },
+            jack: Jack::new(&texture_helper),
             game_bounds: Rect {
                 bottom_left: (20.0, 20.0).into(),
                 top_right: (580.0, 580.0).into(),
@@ -120,38 +146,74 @@ impl BombJackGame {
                 Bomb::new(404.0, 81.0, &texture_helper),
                 Bomb::new(464.0, 81.0, &texture_helper),
             ],
+            last_update: Instant::now(),
+            frame: 0,
         }
     }
 
     pub fn update(&mut self, input_state: &InputState) {
+        if self
+            .last_update
+            .elapsed()
+            .lt(&Duration::from_millis(1000 / 60))
+        {
+            return;
+        }
+        self.jack.direction = Direction::Idle;
+        self.last_update = Instant::now();
+
+        self.frame = self.frame.wrapping_add(1); // Wraps around on overflow.
+        let original_y = self.jack.position.y;
+
         // Update game
-        let on_ground = self.jack_on_ground();
+        let on_ground = self.jack.thrust == 0.0 && self.jack_on_ground();
+
+        // TODO: Improve this so jack doesn't land in the middle of a platform.
+        if !on_ground {
+            self.jack.position.y -= 4.0;
+        }
+        self.jack.position.y += self.jack.thrust;
 
         self.jack.thrust = if on_ground {
             if input_state.up_pressed {
                 20.0
             } else {
-                0.0
+                self.jack.thrust
             }
         } else {
-            (self.jack.thrust - 0.4).max(-1.0).min(20.0)
+            (self.jack.thrust - 0.4).max(00.0).min(20.0)
         };
 
-        self.jack.position.y += self.jack.thrust;
         self.jack.position.y = self
             .jack
             .position
             .y
             .min(self.game_bounds.top_right.y - self.jack.size.height);
 
+        if self.jack.position.y > original_y {
+            self.jack.direction = Direction::Up;
+        } else if self.jack.position.y < original_y {
+            self.jack.direction = Direction::Down;
+        }
+
         if input_state.left_pressed && self.jack.position.x > self.game_bounds.bottom_left.x {
-            self.jack.position.x -= 1.0;
+            self.jack.position.x -= 2.0;
+            self.jack.direction = if self.jack.position.y == original_y && on_ground {
+                Direction::Left
+            } else {
+                Direction::UpLeft
+            }
         }
 
         if input_state.right_pressed
             && (self.jack.position.x + self.jack.size.width) < self.game_bounds.top_right.x
         {
-            self.jack.position.x += 1.0;
+            self.jack.position.x += 2.0;
+            self.jack.direction = if self.jack.position.y == original_y && on_ground {
+                Direction::Right
+            } else {
+                Direction::UpRight
+            };
         }
 
         for bomb in &mut self.bombs {
@@ -163,6 +225,10 @@ impl BombJackGame {
                 bomb.disarmed = true;
             }
         }
+
+        if self.frame % 2 == 0 {
+            self.jack.next_frame();
+        }
     }
 
     fn jack_on_ground(&self) -> bool {
@@ -170,11 +236,15 @@ impl BombJackGame {
             return true;
         }
 
+        let (x, y) = (
+            self.jack.position.x + self.jack.size.width / 2.0,
+            self.jack.position.y,
+        );
         for platform in &self.platforms {
-            if self.jack.position.x + self.jack.size.width >= platform.position.x
-                && self.jack.position.x < platform.position.x + platform.size.width
-                && self.jack.position.y <= platform.position.y + platform.size.height
-                && self.jack.position.y >= platform.position.y + platform.size.height - 1.0
+            if x >= platform.position.x
+                && x <= platform.position.x + platform.size.width
+                && y >= platform.position.y + platform.size.height - 4.0
+                && y <= platform.position.y + platform.size.height
             {
                 return true;
             }
