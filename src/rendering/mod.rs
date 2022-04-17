@@ -99,8 +99,8 @@ impl Graphics {
 
     pub fn render(
         &mut self,
-        squares: &[&Square],
-        sprites: &[&Sprite],
+        squares: &[Square],
+        sprites: &[Sprite],
     ) -> Result<(), wgpu::SurfaceError> {
         // Setup render.
         let output = self.surface.get_current_texture()?;

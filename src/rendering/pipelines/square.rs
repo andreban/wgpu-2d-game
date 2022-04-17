@@ -208,12 +208,10 @@ impl<'a> SquarePipeline {
         &'a mut self,
         render_pass: &mut RenderPass<'a>,
         queue: &mut Queue,
-        squares: &[&Square],
+        squares: &[Square],
     ) {
-        let instance_data: Vec<SquareInstance> = squares
-            .iter()
-            .map(|s| SquareInstance::from_square(*s))
-            .collect();
+        let instance_data: Vec<SquareInstance> =
+            squares.iter().map(SquareInstance::from_square).collect();
         queue.write_buffer(
             &self.instance_buffer,
             0,

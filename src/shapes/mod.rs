@@ -7,6 +7,7 @@ pub struct Square {
     pub color: Vector3<f32>,
 }
 
+#[derive(Copy, Clone)]
 pub struct Sprite {
     pub position: Vector2<f32>,
     pub size: LogicalSize<f32>,

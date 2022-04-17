@@ -58,20 +58,19 @@ pub async fn run() {
                 game.update(&input_state);
 
                 // Render game
-                graphics
-                    .render(
-                        &[],
-                        &[
-                            &game.background,
-                            &game.platforms[0],
-                            &game.platforms[1],
-                            &game.platforms[2],
-                            &game.platforms[3],
-                            &game.platforms[4],
-                            &(&game.jack).into(),
-                        ],
-                    )
-                    .unwrap();
+                let mut sprites = vec![game.background];
+                sprites.extend_from_slice(&game.platforms);
+                sprites.extend_from_slice(
+                    &game
+                        .bombs
+                        .iter()
+                        .filter(|b| !b.disarmed)
+                        .map(Sprite::from)
+                        .collect::<Vec<Sprite>>(),
+                );
+                sprites.push(Sprite::from(&game.jack));
+
+                graphics.render(&[], &sprites).unwrap();
             }
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually
