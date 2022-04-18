@@ -27,19 +27,19 @@ pub struct Jack {
 impl Jack {
     pub fn new(texture_helper: &TextureHelper) -> Self {
         let texture_map = enum_map! {
-            Direction::Idle => Animation::new(vec![texture_helper.texture_coord(601.0, 256.0, 39.0, 45.0)]),
-            Direction::Up => Animation::new(vec![texture_helper.texture_coord(600.0, 208.0, 40.0, 48.0)]),
-            Direction::Down => Animation::new(vec![texture_helper.texture_coord(636.0, 64.0, 40.0, 48.0)]),
+            Direction::Idle => Animation::new(vec![texture_helper.texture_coord(601.0, 256.0, 39.0, 45.0)], false),
+            Direction::Up => Animation::new(vec![texture_helper.texture_coord(600.0, 208.0, 40.0, 48.0)], false),
+            Direction::Down => Animation::new(vec![texture_helper.texture_coord(636.0, 64.0, 40.0, 48.0)], false),
             Direction::Left => Animation::new(vec![
                 texture_helper.texture_coord(600.0, 301.0, 40.0, 48.0),
                 texture_helper.texture_coord(639.0, 256.0, 40.0, 48.0),
-            ]),
+            ], true),
             Direction::Right => Animation::new(vec![
                 texture_helper.texture_coord(640.0, 208.0, 40.0, 48.0),
                 texture_helper.texture_coord(648.0, 160.0, 40.0, 48.0),
-            ]),
-            Direction::UpRight => Animation::new(vec![texture_helper.texture_coord(676.0, 64.0, 40.0, 48.0)]),
-            Direction::UpLeft => Animation::new(vec![texture_helper.texture_coord(636.0, 112.0, 40.0, 48.0)]),
+            ], true),
+            Direction::UpRight => Animation::new(vec![texture_helper.texture_coord(676.0, 64.0, 40.0, 48.0)], false),
+            Direction::UpLeft => Animation::new(vec![texture_helper.texture_coord(636.0, 112.0, 40.0, 48.0)], false),
         };
 
         Self {

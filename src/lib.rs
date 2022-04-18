@@ -64,7 +64,7 @@ pub async fn run() {
                     &game
                         .bombs
                         .iter()
-                        .filter(|b| !b.disarmed)
+                        // .filter(|b| !b.disarmed)
                         .map(Sprite::from)
                         .collect::<Vec<Sprite>>(),
                 );

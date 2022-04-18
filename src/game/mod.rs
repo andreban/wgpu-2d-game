@@ -15,20 +15,26 @@ pub const CANVAS_HEIGHT: f32 = 650.0;
 pub struct Animation {
     frames: Vec<Vector4<f32>>,
     current_frame: usize,
+    looping: bool,
 }
 
 impl Animation {
-    pub fn new(frames: Vec<Vector4<f32>>) -> Self {
+    pub fn new(frames: Vec<Vector4<f32>>, looping: bool) -> Self {
         Self {
             frames,
             current_frame: 0,
+            looping,
         }
     }
 
     pub fn next_frame(&mut self) -> Vector4<f32> {
         let frame = self.frames[self.current_frame];
         self.current_frame = if self.current_frame == self.frames.len() - 1 {
-            0
+            if self.looping {
+                0
+            } else {
+                self.current_frame
+            }
         } else {
             self.current_frame + 1
         };
@@ -223,11 +229,12 @@ impl BombJackGame {
                 && self.jack.position.x + self.jack.size.width > bomb.position.x
                 && self.jack.position.y < bomb.position.y + bomb.size.height
                 && self.jack.position.y + self.jack.size.height > bomb.position.y
-                && !bomb.disarmed
+                && bomb.state != bomb::State::Collected
             {
-                bomb.disarmed = true;
+                bomb.state = bomb::State::Collected;
                 self.score += 100;
             }
+            bomb.next_frame();
         }
 
         if self.frame % 2 == 0 {
