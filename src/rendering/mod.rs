@@ -5,7 +5,9 @@ pub mod texture;
 use crate::{Sprite, Square};
 use pipelines::{SpritePipeline, SquarePipeline};
 use std::iter;
+use wgpu::util::StagingBelt;
 use wgpu::{Adapter, Device, Instance, Queue, Surface, SurfaceConfiguration};
+use wgpu_glyph::{ab_glyph, GlyphBrush, GlyphBrushBuilder, Section, Text};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
@@ -27,10 +29,16 @@ pub struct Graphics {
     pub configuration: SurfaceConfiguration,
     pub square_pipeline: SquarePipeline,
     pub sprite_pipeline: SpritePipeline,
+    pub glyph_brush: GlyphBrush<()>,
+    pub staging_belt: StagingBelt,
 }
 
 impl Graphics {
     pub async fn new(window: &Window) -> Self {
+        let inconsolata =
+            ab_glyph::FontArc::try_from_slice(include_bytes!("../assets/Inconsolata-Regular.ttf"))
+                .unwrap();
+
         let size = window.inner_size();
 
         // Create an instance of WebGPU.
@@ -71,6 +79,10 @@ impl Graphics {
             present_mode: wgpu::PresentMode::Fifo,
         };
         surface.configure(&device, &configuration);
+        let staging_belt = wgpu::util::StagingBelt::new(1024);
+
+        let glyph_brush =
+            GlyphBrushBuilder::using_font(inconsolata).build(&device, configuration.format);
 
         let square_pipeline = SquarePipeline::new(&mut device, &mut queue, &configuration);
         let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration);
@@ -85,6 +97,8 @@ impl Graphics {
             configuration,
             square_pipeline,
             sprite_pipeline,
+            glyph_brush,
+            staging_belt,
         }
     }
 
@@ -101,6 +115,7 @@ impl Graphics {
         &mut self,
         squares: &[Square],
         sprites: &[Sprite],
+        score: u32,
     ) -> Result<(), wgpu::SurfaceError> {
         // Setup render.
         let output = self.surface.get_current_texture()?;
@@ -139,6 +154,28 @@ impl Graphics {
 
         // Submit to screen.
         drop(render_pass);
+
+        self.glyph_brush.queue(Section {
+            screen_position: (350.0, 10.0),
+            bounds: (self.size.width as f32, self.size.height as f32),
+            text: vec![Text::new(&format!("{}", score))
+                .with_color([1.0, 0.0, 0.0, 1.0])
+                .with_scale(40.0)],
+            ..Section::default()
+        });
+
+        self.glyph_brush
+            .draw_queued(
+                &self.device,
+                &mut self.staging_belt,
+                &mut encoder,
+                view,
+                self.size.width,
+                self.size.height,
+            )
+            .expect("Draw queued");
+
+        self.staging_belt.finish();
         self.queue.submit(iter::once(encoder.finish()));
         output.present();
         Ok(())

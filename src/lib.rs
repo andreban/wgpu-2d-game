@@ -70,7 +70,7 @@ pub async fn run() {
                 );
                 sprites.push(Sprite::from(&game.jack));
 
-                graphics.render(&[], &sprites).unwrap();
+                graphics.render(&[], &sprites, game.score).unwrap();
             }
             Event::MainEventsCleared => {
                 // RedrawRequested will only trigger once, unless we manually

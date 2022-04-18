@@ -16,3 +16,4 @@ bytemuck = {version = "1.9.1", features = ["derive"]}
 anyhow = "1.0.56"
 image = {version = "0.24.1", default-features = false, features = ["jpeg", "png"]}
 enum-map = "2.1.0"
+wgpu_glyph = "0.16.0"

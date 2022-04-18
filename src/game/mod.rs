@@ -75,6 +75,7 @@ pub struct BombJackGame {
     pub bombs: Vec<Bomb>,
     last_update: Instant,
     frame: u32,
+    pub score: u32,
 }
 
 impl BombJackGame {
@@ -148,6 +149,7 @@ impl BombJackGame {
             ],
             last_update: Instant::now(),
             frame: 0,
+            score: 0,
         }
     }
 
@@ -221,8 +223,10 @@ impl BombJackGame {
                 && self.jack.position.x + self.jack.size.width > bomb.position.x
                 && self.jack.position.y < bomb.position.y + bomb.size.height
                 && self.jack.position.y + self.jack.size.height > bomb.position.y
+                && !bomb.disarmed
             {
                 bomb.disarmed = true;
+                self.score += 100;
             }
         }
 
