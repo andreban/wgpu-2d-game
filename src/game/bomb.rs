@@ -1,8 +1,8 @@
 use crate::game::{Animation, TextureHelper};
 use crate::Sprite;
 use cgmath::{Vector2, Vector4};
-use winit::dpi::LogicalSize;
 use enum_map::{enum_map, Enum, EnumMap};
+use winit::dpi::LogicalSize;
 
 #[derive(Copy, Clone, Enum, Eq, PartialEq)]
 pub enum State {
