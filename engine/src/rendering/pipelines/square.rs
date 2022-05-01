@@ -1,6 +1,6 @@
 use crate::rendering::camera::{Camera2d, CameraUniform};
 use crate::rendering::pipelines::{Vertex, SQUARE_INDICES, SQUARE_VERTICES};
-use crate::Square;
+use crate::rendering::shapes::Square;
 use cgmath::Matrix4;
 use wgpu::util::DeviceExt;
 use wgpu::{
@@ -90,7 +90,7 @@ impl<'a> SquarePipeline {
 
         // Camera Uniform
         let camera2d = Camera2d::new(600.0, 650.0);
-        let mut camera_uniform = CameraUniform::new();
+        let mut camera_uniform = CameraUniform::default();
         camera_uniform.update_view_proj(&camera2d);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

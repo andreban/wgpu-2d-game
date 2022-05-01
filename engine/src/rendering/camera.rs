@@ -1,5 +1,6 @@
 use cgmath::Vector2;
 use winit::dpi::PhysicalSize;
+use cgmath::SquareMatrix;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
@@ -8,16 +9,17 @@ pub struct CameraUniform {
 }
 
 impl CameraUniform {
-    pub fn new() -> Self {
-        use cgmath::SquareMatrix;
-        Self {
-            view_proj: cgmath::Matrix4::identity().into(),
-        }
-    }
-
     pub fn update_view_proj(&mut self, camera: &Camera2d) {
         let matrix = crate::rendering::OPENGL_TO_WGPU_MATRIX * camera.build_matrix();
         self.view_proj = matrix.into();
+    }
+}
+
+impl Default for CameraUniform {
+    fn default() -> Self {
+        Self {
+            view_proj: cgmath::Matrix4::identity().into(),
+        }
     }
 }
 

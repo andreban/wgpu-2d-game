@@ -2,7 +2,11 @@ mod bomb;
 mod jack;
 
 use crate::game::jack::Direction;
-use crate::{InputState, Sprite};
+use crate::InputState;
+use engine::{
+    rendering::Canvas,
+    rendering::shapes::Sprite,
+};
 use bomb::Bomb;
 use cgmath::{Vector2, Vector4};
 use jack::Jack;
@@ -68,6 +72,7 @@ impl TextureHelper {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Rect {
     pub bottom_left: Vector2<f32>,
     pub top_right: Vector2<f32>,
@@ -176,7 +181,7 @@ impl BombJackGame {
         // Update game
         let on_ground = self.jack.thrust == 0.0 && self.jack_on_ground();
 
-        // TODO: Improve this so jack doesn't land in the middle of a platform.
+        // TODO: Improve this so bomberjack doesn't land in the middle of a platform.
         if !on_ground {
             self.jack.position.y -= 4.0;
         }
@@ -261,5 +266,19 @@ impl BombJackGame {
             }
         }
         false
+    }
+
+    pub fn render(&mut self, canvas: &mut Canvas) {
+        canvas.draw_sprite(&self.background);
+
+        for platform in &self.platforms {
+            canvas.draw_sprite(platform);
+        }
+
+        for bomb in &self.bombs {
+            canvas.draw_sprite(&bomb.into());
+        }
+
+        canvas.draw_sprite(&Sprite::from(&self.jack));
     }
 }

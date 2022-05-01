@@ -1,6 +1,7 @@
 use cgmath::{Vector2, Vector3, Vector4};
 use winit::dpi::{LogicalSize, PhysicalSize};
 
+#[derive(Copy, Clone)]
 pub struct Square {
     pub position: Vector2<f32>,
     pub size: PhysicalSize<f32>,

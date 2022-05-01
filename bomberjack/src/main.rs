@@ -1,4 +1,4 @@
-use wgpu_2d_game::run;
+use bomberjack::run;
 
 fn main() {
     pollster::block_on(run());

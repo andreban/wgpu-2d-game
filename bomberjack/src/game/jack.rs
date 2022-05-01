@@ -45,7 +45,7 @@ impl Jack {
         Self {
             position: (300.0, 300.0).into(),
             size: (39.0, 45.0).into(),
-            // Add 0.5 to X, to avoid a red line showing sometimes to the left of jack.
+            // Add 0.5 to X, to avoid a red line showing sometimes to the left of bomberjack.
             texture: texture_helper.texture_coord(600.5, 256.0, 39.0, 45.0),
             thrust: 0.0,
             direction: Direction::Idle,

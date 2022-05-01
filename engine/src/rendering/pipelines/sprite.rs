@@ -1,7 +1,7 @@
 use crate::rendering::camera::{Camera2d, CameraUniform};
 use crate::rendering::pipelines::{Vertex, SQUARE_INDICES, SQUARE_VERTICES};
 use crate::rendering::texture::Texture;
-use crate::Sprite;
+use crate::rendering::shapes::Sprite;
 use cgmath::Matrix4;
 use wgpu::util::DeviceExt;
 use wgpu::{
@@ -86,7 +86,7 @@ impl<'a> SpritePipeline {
         queue: &mut Queue,
         configuration: &SurfaceConfiguration,
     ) -> Self {
-        let diffuse_bytes = include_bytes!("../../assets/texture.png");
+        let diffuse_bytes = include_bytes!("../../../../bomberjack/src/assets/texture.png");
         let diffuse_texture =
             Texture::from_bytes(device, queue, diffuse_bytes, "texture.png").unwrap();
 
@@ -135,7 +135,7 @@ impl<'a> SpritePipeline {
 
         // Camera Uniform
         let camera2d = Camera2d::new(600.0, 650.0);
-        let mut camera_uniform = CameraUniform::new();
+        let mut camera_uniform = CameraUniform::default();
         camera_uniform.update_view_proj(&camera2d);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
