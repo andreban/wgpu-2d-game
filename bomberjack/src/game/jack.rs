@@ -1,6 +1,6 @@
 use crate::game::{Animation, TextureHelper};
 use crate::Sprite;
-use cgmath::{Vector2, Vector4};
+use cgmath::Vector2;
 use enum_map::{enum_map, Enum, EnumMap};
 use winit::dpi::LogicalSize;
 
@@ -18,7 +18,6 @@ pub enum Direction {
 pub struct Jack {
     pub position: Vector2<f32>,
     pub size: LogicalSize<f32>,
-    pub texture: Vector4<f32>, //x0, y0, x1, y1 - or (0.0, 0.0, 1.0, 1.0)
     pub thrust: f32,
     pub direction: Direction,
     texture_map: EnumMap<Direction, Animation>,
@@ -45,8 +44,6 @@ impl Jack {
         Self {
             position: (300.0, 300.0).into(),
             size: (39.0, 45.0).into(),
-            // Add 0.5 to X, to avoid a red line showing sometimes to the left of bomberjack.
-            texture: texture_helper.texture_coord(600.5, 256.0, 39.0, 45.0),
             thrust: 0.0,
             direction: Direction::Idle,
             texture_map,

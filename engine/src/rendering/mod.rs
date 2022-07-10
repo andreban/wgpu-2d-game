@@ -71,10 +71,12 @@ impl Graphics {
             .await
             .unwrap();
 
+
         // Create the configuration.
+        let format = surface.get_supported_formats(&adapter)[0];
         let configuration = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: surface.get_preferred_format(&adapter).unwrap(),
+            format,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
@@ -131,7 +133,7 @@ impl Graphics {
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
-            color_attachments: &[wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view,
                 resolve_target: None,
                 ops: wgpu::Operations {
@@ -143,7 +145,7 @@ impl Graphics {
                     }),
                     store: true,
                 },
-            }],
+            })],
             depth_stencil_attachment: None,
         });
 
@@ -227,7 +229,7 @@ impl <'a> Canvas <'a> {
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
-            color_attachments: &[wgpu::RenderPassColorAttachment {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view,
                 resolve_target: None,
                 ops: wgpu::Operations {
@@ -239,7 +241,7 @@ impl <'a> Canvas <'a> {
                     }),
                     store: true,
                 },
-            }],
+            })],
             depth_stencil_attachment: None,
         });
 
@@ -255,27 +257,27 @@ impl <'a> Canvas <'a> {
         // Submit to screen.
         drop(render_pass);
 
-        // self.glyph_brush.queue(Section {
-        //     screen_position: (350.0, 10.0),
-        //     bounds: (self.size.width as f32, self.size.height as f32),
-        //     text: vec![Text::new(&format!("{}", score))
-        //         .with_color([1.0, 0.0, 0.0, 1.0])
-        //         .with_scale(40.0)],
-        //     ..Section::default()
-        // });
-        //
-        // self.glyph_brush
-        //     .draw_queued(
-        //         &self.device,
-        //         &mut self.staging_belt,
-        //         &mut encoder,
-        //         view,
-        //         self.size.width,
-        //         self.size.height,
-        //     )
-        //     .expect("Draw queued");
-        //
-        // self.staging_belt.finish();
+        self.graphics.glyph_brush.queue(Section {
+            screen_position: (350.0, 10.0),
+            bounds: (self.graphics.size.width as f32, self.graphics.size.height as f32),
+            text: vec![Text::new(&format!("{}", 1000))
+                .with_color([1.0, 0.0, 0.0, 1.0])
+                .with_scale(40.0)],
+            ..Section::default()
+        });
+
+        self.graphics.glyph_brush
+            .draw_queued(
+                &self.graphics.device,
+                &mut self.graphics.staging_belt,
+                &mut encoder,
+                view,
+                self.graphics.size.width,
+                self.graphics.size.height,
+            )
+            .expect("Draw queued");
+
+        self.graphics.staging_belt.finish();
         self.graphics.queue.submit(iter::once(encoder.finish()));
         output.present();
     }
