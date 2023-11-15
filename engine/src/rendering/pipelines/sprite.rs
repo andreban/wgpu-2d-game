@@ -1,7 +1,7 @@
 use crate::rendering::camera::{Camera2d, CameraUniform};
 use crate::rendering::pipelines::{Vertex, SQUARE_INDICES, SQUARE_VERTICES};
-use crate::rendering::texture::Texture;
 use crate::rendering::shapes::Sprite;
+use crate::rendering::texture::Texture;
 use cgmath::Matrix4;
 use wgpu::util::DeviceExt;
 use wgpu::{

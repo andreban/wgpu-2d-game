@@ -8,10 +8,10 @@ use winit::{
     window::WindowBuilder,
 };
 
+use engine::rendering::shapes::Sprite;
+use engine::rendering::{Canvas, Graphics};
 use game::BombJackGame;
 use input::InputState;
-use engine::rendering::{Canvas, Graphics};
-use engine::rendering::shapes::Sprite;
 
 pub async fn run() {
     let event_loop = EventLoop::new();
@@ -22,7 +22,7 @@ pub async fn run() {
         .unwrap();
 
     let mut input_state = InputState::new();
-    let mut graphics = Graphics::new(&window).await;
+    let mut graphics = Graphics::new(&window).await.unwrap();
     let mut game = BombJackGame::new();
 
     event_loop.run(move |event, _, control_flow| {

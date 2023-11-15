@@ -1,10 +1,11 @@
 pub mod camera;
 pub mod pipelines;
-pub mod texture;
 pub mod shapes;
+pub mod texture;
 
-use shapes::{Sprite, Square};
 use pipelines::{SpritePipeline, SquarePipeline};
+use shapes::{Sprite, Square};
+use std::error::Error;
 use std::iter;
 use wgpu::util::StagingBelt;
 use wgpu::{Adapter, Device, Instance, Queue, Surface, SurfaceConfiguration};
@@ -35,28 +36,28 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub async fn new(window: &Window) -> Self {
-        let inconsolata =
-            ab_glyph::FontArc::try_from_slice(include_bytes!("../../../bomberjack/src/assets/Inconsolata-Regular.ttf"))
-                .unwrap();
+    pub async fn new(window: &Window) -> Result<Self, Box<dyn Error>> {
+        let inconsolata = ab_glyph::FontArc::try_from_slice(include_bytes!(
+            "../../../bomberjack/src/assets/Inconsolata-Regular.ttf"
+        ))?;
 
         let size = window.inner_size();
 
         // Create an instance of WebGPU.
-        let instance = wgpu::Instance::new(wgpu::Backends::all());
+        let instance = wgpu::Instance::default();
 
         // Create a Surface.
-        let surface = unsafe { instance.create_surface(window) };
+        let surface = unsafe { instance.create_surface(window) }?;
 
         // Request an adapter, compatible with the surface.
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
-                compatible_surface: Some(&surface),
                 force_fallback_adapter: false,
+                compatible_surface: Some(&surface),
             })
             .await
-            .unwrap();
+            .unwrap(); // TODO: Create Error in None case.
 
         // Request a device.
         let (mut device, mut queue) = adapter
@@ -71,15 +72,17 @@ impl Graphics {
             .await
             .unwrap();
 
-
         // Create the configuration.
-        let format = surface.get_supported_formats(&adapter)[0];
+        let swapchain_capabilities = surface.get_capabilities(&adapter);
+        let swapchain_format = swapchain_capabilities.formats[0];
         let configuration = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format,
+            format: swapchain_format,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: wgpu::CompositeAlphaMode::Auto,
+            view_formats: vec![],
         };
         surface.configure(&device, &configuration);
         let staging_belt = wgpu::util::StagingBelt::new(1024);
@@ -90,7 +93,7 @@ impl Graphics {
         let square_pipeline = SquarePipeline::new(&mut device, &mut queue, &configuration);
         let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration);
 
-        Graphics {
+        Ok(Graphics {
             size,
             instance,
             surface,
@@ -102,7 +105,7 @@ impl Graphics {
             sprite_pipeline,
             glyph_brush,
             staging_belt,
-        }
+        })
     }
 
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
@@ -193,7 +196,7 @@ pub struct Canvas<'a> {
     rects: Vec<Square>,
 }
 
-impl <'a> Canvas <'a> {
+impl<'a> Canvas<'a> {
     pub fn new(graphics: &'a mut Graphics) -> Self {
         Self {
             graphics,
@@ -220,12 +223,12 @@ impl <'a> Canvas <'a> {
         let view = &output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self
-            .graphics
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
+        let mut encoder =
+            self.graphics
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("Render Encoder"),
+                });
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Render Pass"),
@@ -246,12 +249,18 @@ impl <'a> Canvas <'a> {
         });
 
         // Render pipelines.
-        self.graphics.sprite_pipeline
-            .render(&mut render_pass, &mut self.graphics.queue, &self.sprites);
+        self.graphics.sprite_pipeline.render(
+            &mut render_pass,
+            &mut self.graphics.queue,
+            &self.sprites,
+        );
 
         if !self.rects.is_empty() {
-            self.graphics.square_pipeline
-                .render(&mut render_pass, &mut self.graphics.queue, &self.rects);
+            self.graphics.square_pipeline.render(
+                &mut render_pass,
+                &mut self.graphics.queue,
+                &self.rects,
+            );
         }
 
         // Submit to screen.
@@ -259,14 +268,18 @@ impl <'a> Canvas <'a> {
 
         self.graphics.glyph_brush.queue(Section {
             screen_position: (350.0, 10.0),
-            bounds: (self.graphics.size.width as f32, self.graphics.size.height as f32),
+            bounds: (
+                self.graphics.size.width as f32,
+                self.graphics.size.height as f32,
+            ),
             text: vec![Text::new(&format!("{}", 1000))
                 .with_color([1.0, 0.0, 0.0, 1.0])
                 .with_scale(40.0)],
             ..Section::default()
         });
 
-        self.graphics.glyph_brush
+        self.graphics
+            .glyph_brush
             .draw_queued(
                 &self.graphics.device,
                 &mut self.graphics.staging_belt,
@@ -283,7 +296,7 @@ impl <'a> Canvas <'a> {
     }
 }
 
-impl <'a> Drop for Canvas<'a> {
+impl<'a> Drop for Canvas<'a> {
     fn drop(&mut self) {
         self.render();
     }
