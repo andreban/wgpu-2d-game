@@ -10,6 +10,6 @@ anyhow = "1.0.70"
 bytemuck = {version = "1.13.1", features = ["derive"]}
 cgmath = "0.18.0"
 image = {version = "0.24.6", default-features = false, features = ["jpeg", "png"]}
-wgpu = "0.16.0"
-wgpu_glyph = "0.20.0"
+wgpu = "0.17.2"
+wgpu_glyph = "0.21.0"
 winit = "0.28.3"
