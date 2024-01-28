@@ -1,5 +1,4 @@
-[![Rust](https://github.com/andreban/wgpu-2d-game/actions/workflows/rust.yml/badge.svg)](https://github.com/andreban/wgpu-2d-game/actions/workflows/rust.yml)
-# wgpu-2d-game
+# wgpu-2d-game [![Rust](https://github.com/andreban/wgpu-2d-game/actions/workflows/rust.yml/badge.svg)](https://github.com/andreban/wgpu-2d-game/actions/workflows/rust.yml)
 
 Rust implementation of the ["Bomb Jack" game][1], shipped on the [Wireframe][3] #59 magazine and on the [GitHub source code][2].
 
