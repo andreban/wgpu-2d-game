@@ -5,8 +5,8 @@ use crate::rendering::texture::Texture;
 use cgmath::Matrix4;
 use wgpu::util::DeviceExt;
 use wgpu::{
-    BindGroup, BufferAddress, BufferDescriptor, Device, Queue, RenderPass, SurfaceConfiguration,
-    VertexAttribute,
+    BindGroup, BufferAddress, BufferDescriptor, Device, PipelineCompilationOptions, Queue,
+    RenderPass, SurfaceConfiguration, VertexAttribute,
 };
 
 const MAX_INSTANCES: usize = 1000;
@@ -181,12 +181,14 @@ impl<'a> SpritePipeline {
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &shader,
-                entry_point: "vs_main",
+                entry_point: Some("vs_main"),
+                compilation_options: PipelineCompilationOptions::default(),
                 buffers: &[Vertex::desc(), SpriteInstance::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
-                entry_point: "fs_main",
+                entry_point: Some("fs_main"),
+                compilation_options: PipelineCompilationOptions::default(),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: configuration.format,
                     blend: Some(wgpu::BlendState {
@@ -217,6 +219,7 @@ impl<'a> SpritePipeline {
             // If the pipeline will be used with a multiview render pass, this
             // indicates how many array layers the attachments will have.
             multiview: None,
+            cache: None,
         });
 
         // Vertex & Index Buffers

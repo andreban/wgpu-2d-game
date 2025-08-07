@@ -7,9 +7,10 @@ use pipelines::{SpritePipeline, SquarePipeline};
 use shapes::{Sprite, Square};
 use std::error::Error;
 use std::iter;
+use std::sync::Arc;
 use wgpu::util::StagingBelt;
 use wgpu::{Adapter, Device, Instance, Queue, Surface, SurfaceConfiguration};
-use wgpu_glyph::{ab_glyph, GlyphBrush, GlyphBrushBuilder, Section, Text};
+// use wgpu_glyph::{ab_glyph, GlyphBrush, GlyphBrushBuilder, Section, Text};
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
@@ -24,22 +25,22 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 pub struct Graphics {
     pub size: PhysicalSize<u32>,
     pub instance: Instance,
-    pub surface: Surface,
+    pub surface: Surface<'static>,
     pub adapter: Adapter,
     pub device: Device,
     pub queue: Queue,
     pub configuration: SurfaceConfiguration,
     pub square_pipeline: SquarePipeline,
     pub sprite_pipeline: SpritePipeline,
-    pub glyph_brush: GlyphBrush<()>,
+    // pub glyph_brush: GlyphBrush<()>,
     pub staging_belt: StagingBelt,
 }
 
 impl Graphics {
-    pub async fn new(window: &Window) -> Result<Self, Box<dyn Error>> {
-        let inconsolata = ab_glyph::FontArc::try_from_slice(include_bytes!(
-            "../../../bomberjack/src/assets/Inconsolata-Regular.ttf"
-        ))?;
+    pub async fn new(window: Arc<Window>) -> Result<Self, Box<dyn Error>> {
+        // let inconsolata = ab_glyph::FontArc::try_from_slice(include_bytes!(
+        //     "../../../bomberjack/src/assets/Inconsolata-Regular.ttf"
+        // ))?;
 
         let size = window.inner_size();
 
@@ -47,7 +48,7 @@ impl Graphics {
         let instance = wgpu::Instance::default();
 
         // Create a Surface.
-        let surface = unsafe { instance.create_surface(window) }?;
+        let surface = instance.create_surface(window.clone())?;
 
         // Request an adapter, compatible with the surface.
         let adapter = instance
@@ -61,14 +62,9 @@ impl Graphics {
 
         // Request a device.
         let (mut device, mut queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    label: None,
-                    features: wgpu::Features::empty(),
-                    limits: wgpu::Limits::default(),
-                },
-                None,
-            )
+            .request_device(&wgpu::DeviceDescriptor {
+                ..Default::default()
+            })
             .await
             .unwrap();
 
@@ -83,12 +79,13 @@ impl Graphics {
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: wgpu::CompositeAlphaMode::Auto,
             view_formats: vec![],
+            desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &configuration);
         let staging_belt = wgpu::util::StagingBelt::new(1024);
 
-        let glyph_brush =
-            GlyphBrushBuilder::using_font(inconsolata).build(&device, configuration.format);
+        // let glyph_brush =
+        //     GlyphBrushBuilder::using_font(inconsolata).build(&device, configuration.format);
 
         let square_pipeline = SquarePipeline::new(&mut device, &mut queue, &configuration);
         let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration);
@@ -103,7 +100,7 @@ impl Graphics {
             configuration,
             square_pipeline,
             sprite_pipeline,
-            glyph_brush,
+            // glyph_brush,
             staging_belt,
         })
     }
@@ -138,6 +135,7 @@ impl Graphics {
             label: Some("Render Pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view,
+                depth_slice: None,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -146,10 +144,11 @@ impl Graphics {
                         b: 0.3,
                         a: 1.0,
                     }),
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
+            ..Default::default()
         });
 
         // Render pipelines.
@@ -163,25 +162,25 @@ impl Graphics {
         // Submit to screen.
         drop(render_pass);
 
-        self.glyph_brush.queue(Section {
-            screen_position: (350.0, 10.0),
-            bounds: (self.size.width as f32, self.size.height as f32),
-            text: vec![Text::new(&format!("{}", score))
-                .with_color([1.0, 0.0, 0.0, 1.0])
-                .with_scale(40.0)],
-            ..Section::default()
-        });
+        // self.glyph_brush.queue(Section {
+        //     screen_position: (350.0, 10.0),
+        //     bounds: (self.size.width as f32, self.size.height as f32),
+        //     text: vec![Text::new(&format!("{}", score))
+        //         .with_color([1.0, 0.0, 0.0, 1.0])
+        //         .with_scale(40.0)],
+        //     ..Section::default()
+        // });
 
-        self.glyph_brush
-            .draw_queued(
-                &self.device,
-                &mut self.staging_belt,
-                &mut encoder,
-                view,
-                self.size.width,
-                self.size.height,
-            )
-            .expect("Draw queued");
+        // self.glyph_brush
+        //     .draw_queued(
+        //         &self.device,
+        //         &mut self.staging_belt,
+        //         &mut encoder,
+        //         view,
+        //         self.size.width,
+        //         self.size.height,
+        //     )
+        //     .expect("Draw queued");
 
         self.staging_belt.finish();
         self.queue.submit(iter::once(encoder.finish()));
@@ -234,6 +233,7 @@ impl<'a> Canvas<'a> {
             label: Some("Render Pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view,
+                depth_slice: None,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -242,10 +242,11 @@ impl<'a> Canvas<'a> {
                         b: 0.3,
                         a: 1.0,
                     }),
-                    store: true,
+                    store: wgpu::StoreOp::Store,
                 },
             })],
             depth_stencil_attachment: None,
+            ..Default::default()
         });
 
         // Render pipelines.
@@ -266,29 +267,29 @@ impl<'a> Canvas<'a> {
         // Submit to screen.
         drop(render_pass);
 
-        self.graphics.glyph_brush.queue(Section {
-            screen_position: (350.0, 10.0),
-            bounds: (
-                self.graphics.size.width as f32,
-                self.graphics.size.height as f32,
-            ),
-            text: vec![Text::new(&format!("{}", 1000))
-                .with_color([1.0, 0.0, 0.0, 1.0])
-                .with_scale(40.0)],
-            ..Section::default()
-        });
+        // self.graphics.glyph_brush.queue(Section {
+        //     screen_position: (350.0, 10.0),
+        //     bounds: (
+        //         self.graphics.size.width as f32,
+        //         self.graphics.size.height as f32,
+        //     ),
+        //     text: vec![Text::new(&format!("{}", 1000))
+        //         .with_color([1.0, 0.0, 0.0, 1.0])
+        //         .with_scale(40.0)],
+        //     ..Section::default()
+        // });
 
-        self.graphics
-            .glyph_brush
-            .draw_queued(
-                &self.graphics.device,
-                &mut self.graphics.staging_belt,
-                &mut encoder,
-                view,
-                self.graphics.size.width,
-                self.graphics.size.height,
-            )
-            .expect("Draw queued");
+        // self.graphics
+        //     .glyph_brush
+        //     .draw_queued(
+        //         &self.graphics.device,
+        //         &mut self.graphics.staging_belt,
+        //         &mut encoder,
+        //         view,
+        //         self.graphics.size.width,
+        //         self.graphics.size.height,
+        //     )
+        //     .expect("Draw queued");
 
         self.graphics.staging_belt.finish();
         self.graphics.queue.submit(iter::once(encoder.finish()));

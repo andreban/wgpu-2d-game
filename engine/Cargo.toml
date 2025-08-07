@@ -13,6 +13,6 @@ image = { version = "0.25.6", default-features = false, features = [
     "jpeg",
     "png",
 ] }
-wgpu = "0.17.2"
-wgpu_glyph = "0.21.0"
-winit = "0.28.3"
+wgpu = "26.0.1"
+# wgpu_glyph = "0.21.0"
+winit = "0.30.12"

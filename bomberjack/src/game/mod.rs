@@ -3,12 +3,9 @@ mod jack;
 
 use crate::game::jack::Direction;
 use crate::InputState;
-use engine::{
-    rendering::Canvas,
-    rendering::shapes::Sprite,
-};
 use bomb::Bomb;
 use cgmath::{Vector2, Vector4};
+use engine::{rendering::shapes::Sprite, rendering::Canvas};
 use jack::Jack;
 use std::time::{Duration, Instant};
 use winit::dpi::LogicalSize;

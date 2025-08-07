@@ -1,4 +1,7 @@
-use winit::event::{ElementState, KeyboardInput, VirtualKeyCode};
+use winit::{
+    event::{ElementState, KeyEvent},
+    keyboard::{Key, NamedKey},
+};
 
 pub struct InputState {
     pub up_pressed: bool,
@@ -17,16 +20,18 @@ impl InputState {
         }
     }
 
-    pub fn update(&mut self, input: &KeyboardInput) {
-        match input.virtual_keycode {
-            Some(VirtualKeyCode::Up) => self.up_pressed = input.state.eq(&ElementState::Pressed),
-            Some(VirtualKeyCode::Down) => {
+    pub fn update(&mut self, input: &KeyEvent) {
+        match input.logical_key {
+            Key::Named(NamedKey::ArrowUp) => {
+                self.up_pressed = input.state.eq(&ElementState::Pressed)
+            }
+            Key::Named(NamedKey::ArrowDown) => {
                 self.down_pressed = input.state.eq(&ElementState::Pressed)
             }
-            Some(VirtualKeyCode::Left) => {
+            Key::Named(NamedKey::ArrowLeft) => {
                 self.left_pressed = input.state.eq(&ElementState::Pressed)
             }
-            Some(VirtualKeyCode::Right) => {
+            Key::Named(NamedKey::ArrowRight) => {
                 self.right_pressed = input.state.eq(&ElementState::Pressed)
             }
             _ => {}

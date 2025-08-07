@@ -1,70 +1,74 @@
 mod game;
 mod input;
 
-use winit::{
-    dpi::LogicalSize,
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::WindowBuilder,
-};
+use std::sync::Arc;
+
+use winit::dpi::LogicalSize;
+use winit::{application::ApplicationHandler, event::*, event_loop::EventLoop, window::Window};
 
 use engine::rendering::shapes::Sprite;
 use engine::rendering::{Canvas, Graphics};
 use game::BombJackGame;
 use input::InputState;
 
-pub async fn run() {
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new()
-        .with_resizable(false)
-        .with_inner_size(LogicalSize::new(game::CANVAS_WIDTH, game::CANVAS_HEIGHT))
-        .build(&event_loop)
-        .unwrap();
+struct Game {
+    input_state: InputState,
+    graphics: Option<Graphics>,
+    game: BombJackGame,
+    window: Option<Arc<Window>>,
+}
 
-    let mut input_state = InputState::new();
-    let mut graphics = Graphics::new(&window).await.unwrap();
-    let mut game = BombJackGame::new();
+impl ApplicationHandler for Game {
+    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let window = event_loop
+            .create_window(
+                Window::default_attributes()
+                    .with_resizable(false)
+                    .with_inner_size(LogicalSize::new(game::CANVAS_WIDTH, game::CANVAS_HEIGHT)),
+            )
+            .unwrap();
+        let window = Arc::new(window);
+        self.graphics = Some(pollster::block_on(Graphics::new(window.clone())).unwrap());
+        self.window = Some(window);
+    }
 
-    event_loop.run(move |event, _, control_flow| {
+    fn window_event(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        _window_id: winit::window::WindowId,
+        event: WindowEvent,
+    ) {
         match event {
-            Event::WindowEvent {
-                ref event,
-                window_id,
-            } => {
-                if window_id == window.id() {
-                    match event {
-                        WindowEvent::CloseRequested => {
-                            *control_flow = ControlFlow::Exit;
-                        }
-                        WindowEvent::Resized(physical_size) => {
-                            graphics.resize(*physical_size);
-                        }
-                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                            // new_inner_size is &&mut so w have to dereference it twice
-                            graphics.resize(**new_inner_size);
-                        }
-                        WindowEvent::KeyboardInput { input, .. } => input_state.update(input),
-                        _ => {}
-                    }
-                }
+            WindowEvent::CloseRequested => {
+                println!("The close button was pressed; stopping");
+                event_loop.exit();
             }
-            Event::RedrawRequested(window_id) => {
-                if window_id != window.id() {
-                    return;
+            WindowEvent::RedrawRequested => {
+                if let Some(graphics) = &mut self.graphics {
+                    let mut canvas = Canvas::new(graphics);
+                    self.game.update(&self.input_state);
+                    self.game.render(&mut canvas);
                 }
-                // Update game state.
-                game.update(&input_state);
 
-                // Render game
-                let mut canvas = Canvas::new(&mut graphics);
-                game.render(&mut canvas);
+                if let Some(window) = &self.window {
+                    window.request_redraw();
+                }
             }
-            Event::MainEventsCleared => {
-                // RedrawRequested will only trigger once, unless we manually
-                // request it.
-                window.request_redraw();
+            WindowEvent::KeyboardInput { event, .. } => {
+                self.input_state.update(&event);
             }
             _ => {}
         }
-    });
+    }
+}
+
+pub async fn run() {
+    let event_loop = EventLoop::new().unwrap();
+    let mut game: Game = Game {
+        input_state: InputState::new(),
+        graphics: None,
+        game: BombJackGame::new(),
+        window: None,
+    };
+    event_loop.run_app(&mut game).unwrap();
 }
