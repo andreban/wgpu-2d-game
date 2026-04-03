@@ -82,7 +82,7 @@ impl Graphics {
             desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &configuration);
-        let staging_belt = wgpu::util::StagingBelt::new(1024);
+        let staging_belt = wgpu::util::StagingBelt::new(device.clone(), 1024);
 
         // let glyph_brush =
         //     GlyphBrushBuilder::using_font(inconsolata).build(&device, configuration.format);
@@ -119,9 +119,12 @@ impl Graphics {
         squares: &[Square],
         sprites: &[Sprite],
         score: u32,
-    ) -> Result<(), wgpu::SurfaceError> {
+    ) {
         // Setup render.
-        let output = self.surface.get_current_texture()?;
+        let output = match self.surface.get_current_texture() {
+            wgpu::CurrentSurfaceTexture::Success(t) | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+            _ => return,
+        };
         let view = &output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -185,7 +188,6 @@ impl Graphics {
         self.staging_belt.finish();
         self.queue.submit(iter::once(encoder.finish()));
         output.present();
-        Ok(())
     }
 }
 
@@ -218,7 +220,10 @@ impl<'a> Canvas<'a> {
 
     fn render(&mut self) {
         // Setup render.
-        let output = self.graphics.surface.get_current_texture().unwrap();
+        let output = match self.graphics.surface.get_current_texture() {
+            wgpu::CurrentSurfaceTexture::Success(t) | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+            _ => return,
+        };
         let view = &output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());

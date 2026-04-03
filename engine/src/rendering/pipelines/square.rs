@@ -127,8 +127,8 @@ impl<'a> SquarePipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[&camera_bind_group_layout],
-                push_constant_ranges: &[],
+                bind_group_layouts: &[Some(&camera_bind_group_layout)],
+                immediate_size: 0,
             });
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -173,7 +173,7 @@ impl<'a> SquarePipeline {
             },
             // If the pipeline will be used with a multiview render pass, this
             // indicates how many array layers the attachments will have.
-            multiview: None,
+            multiview_mask: None,
             cache: None,
         });
 

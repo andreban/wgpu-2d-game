@@ -8,8 +8,8 @@ edition = "2021"
 [dependencies]
 cgmath = "0.18.0"
 pollster = "0.4.0"
-winit = "0.30.12"
-env_logger = "0.11.8"
-log = "0.4.16"
-enum-map = "2.1.0"
+winit = "0.30.13"
+env_logger = "0.11.10"
+log = "0.4.29"
+enum-map = "2.7.3"
 engine = { path = "../engine" }
