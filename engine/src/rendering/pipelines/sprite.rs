@@ -264,7 +264,13 @@ impl<'a> SpritePipeline {
         render_pass: &mut RenderPass<'a>,
         queue: &mut Queue,
         sprites: &[Sprite],
-    ) {
+    ) -> Result<(), EngineError> {
+        if sprites.len() > MAX_INSTANCES {
+            return Err(EngineError::TooManyInstances {
+                count: sprites.len(),
+                max: MAX_INSTANCES,
+            });
+        }
         let instance_data: Vec<SpriteInstance> =
             sprites.iter().map(SpriteInstance::from_sprite).collect();
         queue.write_buffer(
@@ -280,5 +286,6 @@ impl<'a> SpritePipeline {
         render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..instance_data.len() as u32);
+        Ok(())
     }
 }

@@ -45,7 +45,12 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub async fn new(window: Arc<Window>, texture_bytes: &[u8], world_width: f32, world_height: f32) -> Result<Self, EngineError> {
+    pub async fn new(
+        window: Arc<Window>,
+        texture_bytes: &[u8],
+        world_width: f32,
+        world_height: f32,
+    ) -> Result<Self, EngineError> {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::default();
@@ -81,8 +86,21 @@ impl Graphics {
 
         let staging_belt = wgpu::util::StagingBelt::new(device.clone(), 1024);
 
-        let square_pipeline = SquarePipeline::new(&mut device, &mut queue, &configuration, world_width, world_height);
-        let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration, texture_bytes, world_width, world_height)?;
+        let square_pipeline = SquarePipeline::new(
+            &mut device,
+            &mut queue,
+            &configuration,
+            world_width,
+            world_height,
+        );
+        let sprite_pipeline = SpritePipeline::new(
+            &mut device,
+            &mut queue,
+            &configuration,
+            texture_bytes,
+            world_width,
+            world_height,
+        )?;
 
         let font_system = FontSystem::new();
         let swash_cache = SwashCache::new();
@@ -131,6 +149,7 @@ pub struct Canvas<'a> {
     sprites: Vec<Sprite>,
     rects: Vec<Square>,
     score: Option<u32>,
+    rendered: bool,
 }
 
 impl<'a> Canvas<'a> {
@@ -140,6 +159,7 @@ impl<'a> Canvas<'a> {
             sprites: vec![],
             rects: vec![],
             score: None,
+            rendered: false,
         }
     }
 
@@ -155,15 +175,17 @@ impl<'a> Canvas<'a> {
         self.score = Some(score);
     }
 
-    pub fn done(self) {
-        drop(self);
+    pub fn done(mut self) -> Result<(), EngineError> {
+        self.render()?;
+        self.rendered = true;
+        Ok(())
     }
 
-    fn render(&mut self) {
+    fn render(&mut self) -> Result<(), EngineError> {
         let output = match self.graphics.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(t)
             | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
-            _ => return,
+            _ => return Ok(()),
         };
         let view = &output
             .texture
@@ -253,14 +275,14 @@ impl<'a> Canvas<'a> {
             &mut render_pass,
             &mut self.graphics.queue,
             &self.sprites,
-        );
+        )?;
 
         if !self.rects.is_empty() {
             self.graphics.square_pipeline.render(
                 &mut render_pass,
                 &mut self.graphics.queue,
                 &self.rects,
-            );
+            )?;
         }
 
         if self.score.is_some() {
@@ -279,11 +301,16 @@ impl<'a> Canvas<'a> {
         self.graphics.staging_belt.finish();
         self.graphics.queue.submit(iter::once(encoder.finish()));
         output.present();
+        Ok(())
     }
 }
 
 impl<'a> Drop for Canvas<'a> {
     fn drop(&mut self) {
-        self.render();
+        if !self.rendered {
+            if let Err(e) = self.render() {
+                eprintln!("Render error: {e}");
+            }
+        }
     }
 }

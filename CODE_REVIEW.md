@@ -16,7 +16,7 @@
 - [x] **4. Hardcoded camera dimensions** — `engine/src/rendering/pipelines/sprite.rs:137`, `engine/src/rendering/pipelines/square.rs:92`
   `Camera2d::new(600.0, 650.0)` is hardcoded inside pipeline constructors. These should come from `SurfaceConfiguration` or be constructor parameters.
 
-- [ ] **5. Instance buffer overflow** — `engine/src/rendering/pipelines/sprite.rs:266-272`
+- [x] **5. Instance buffer overflow** — `engine/src/rendering/pipelines/sprite.rs:266-272`
   No check that `sprites.len() <= MAX_INSTANCES`. Writing past the buffer limit is silent corruption. Add a bounds check before `write_buffer`.
 
 - [ ] **6. Text buffer recreated every frame** — `engine/src/rendering/mod.rs:181-194`

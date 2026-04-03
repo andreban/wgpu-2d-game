@@ -29,7 +29,9 @@ impl ApplicationHandler for Game {
             .unwrap();
         let window = Arc::new(window);
         let texture_bytes = include_bytes!("assets/texture.png");
-        self.graphics = Some(pollster::block_on(Graphics::new(window.clone(), texture_bytes, 600.0, 650.0)).unwrap());
+        self.graphics = Some(
+            pollster::block_on(Graphics::new(window.clone(), texture_bytes, 600.0, 650.0)).unwrap(),
+        );
         self.window = Some(window);
     }
 
@@ -49,6 +51,9 @@ impl ApplicationHandler for Game {
                     let mut canvas = Canvas::new(graphics);
                     self.game.update(&self.input_state);
                     self.game.render(&mut canvas);
+                    if let Err(e) = canvas.done() {
+                        eprintln!("Render error: {e}");
+                    }
                 }
 
                 if let Some(window) = &self.window {

@@ -8,4 +8,6 @@ pub enum EngineError {
     Device(#[from] wgpu::RequestDeviceError),
     #[error("Failed to load texture: {0}")]
     Texture(#[from] image::ImageError),
+    #[error("Too many instances: {count} exceeds maximum of {max}")]
+    TooManyInstances { count: usize, max: usize },
 }

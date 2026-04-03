@@ -1,3 +1,4 @@
+use crate::error::EngineError;
 use crate::rendering::camera::{Camera2d, CameraUniform};
 use crate::rendering::pipelines::{Vertex, SQUARE_INDICES, SQUARE_VERTICES};
 use crate::rendering::shapes::Square;
@@ -214,7 +215,13 @@ impl<'a> SquarePipeline {
         render_pass: &mut RenderPass<'a>,
         queue: &mut Queue,
         squares: &[Square],
-    ) {
+    ) -> Result<(), EngineError> {
+        if squares.len() > MAX_INSTANCES {
+            return Err(EngineError::TooManyInstances {
+                count: squares.len(),
+                max: MAX_INSTANCES,
+            });
+        }
         let instance_data: Vec<SquareInstance> =
             squares.iter().map(SquareInstance::from_square).collect();
         queue.write_buffer(
@@ -229,5 +236,6 @@ impl<'a> SquarePipeline {
         render_pass.set_vertex_buffer(1, self.instance_buffer.slice(..));
         render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..self.num_indices, 0, 0..instance_data.len() as u32);
+        Ok(())
     }
 }
