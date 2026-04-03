@@ -1,3 +1,4 @@
+use crate::error::EngineError;
 use crate::rendering::camera::{Camera2d, CameraUniform};
 use crate::rendering::pipelines::{Vertex, SQUARE_INDICES, SQUARE_VERTICES};
 use crate::rendering::shapes::Sprite;
@@ -85,10 +86,9 @@ impl<'a> SpritePipeline {
         device: &mut Device,
         queue: &mut Queue,
         configuration: &SurfaceConfiguration,
-    ) -> Self {
+    ) -> Result<Self, EngineError> {
         let diffuse_bytes = include_bytes!("../../../../bomberjack/src/assets/texture.png");
-        let diffuse_texture =
-            Texture::from_bytes(device, queue, diffuse_bytes, "texture.png").unwrap();
+        let diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "texture.png")?;
 
         let texture_bind_group_layout =
             &device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -245,7 +245,7 @@ impl<'a> SpritePipeline {
             mapped_at_creation: false,
         });
 
-        Self {
+        Ok(Self {
             render_pipeline,
             vertex_buffer,
             index_buffer,
@@ -254,7 +254,7 @@ impl<'a> SpritePipeline {
             camera_bind_group,
             diffuse_texture,
             diffuse_bind_group,
-        }
+        })
     }
 
     pub fn render(

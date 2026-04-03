@@ -3,13 +3,13 @@ pub mod pipelines;
 pub mod shapes;
 pub mod texture;
 
+use crate::error::EngineError;
 use glyphon::{
     Attrs, Buffer, Cache, Color, Family, FontSystem, Metrics, Resolution, Shaping, SwashCache,
     TextArea, TextAtlas, TextBounds, TextRenderer, Viewport,
 };
 use pipelines::{SpritePipeline, SquarePipeline};
 use shapes::{Sprite, Square};
-use std::error::Error;
 use std::iter;
 use std::sync::Arc;
 use wgpu::util::StagingBelt;
@@ -45,7 +45,7 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub async fn new(window: Arc<Window>) -> Result<Self, Box<dyn Error>> {
+    pub async fn new(window: Arc<Window>) -> Result<Self, EngineError> {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::default();
@@ -57,15 +57,13 @@ impl Graphics {
                 force_fallback_adapter: false,
                 compatible_surface: Some(&surface),
             })
-            .await
-            .unwrap();
+            .await?;
 
         let (mut device, mut queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 ..Default::default()
             })
-            .await
-            .unwrap();
+            .await?;
 
         let swapchain_capabilities = surface.get_capabilities(&adapter);
         let swapchain_format = swapchain_capabilities.formats[0];
@@ -84,15 +82,19 @@ impl Graphics {
         let staging_belt = wgpu::util::StagingBelt::new(device.clone(), 1024);
 
         let square_pipeline = SquarePipeline::new(&mut device, &mut queue, &configuration);
-        let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration);
+        let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration)?;
 
         let font_system = FontSystem::new();
         let swash_cache = SwashCache::new();
         let text_cache = Cache::new(&device);
         let text_viewport = Viewport::new(&device, &text_cache);
         let mut text_atlas = TextAtlas::new(&device, &queue, &text_cache, swapchain_format);
-        let text_renderer =
-            TextRenderer::new(&mut text_atlas, &device, wgpu::MultisampleState::default(), None);
+        let text_renderer = TextRenderer::new(
+            &mut text_atlas,
+            &device,
+            wgpu::MultisampleState::default(),
+            None,
+        );
 
         Ok(Graphics {
             size,
