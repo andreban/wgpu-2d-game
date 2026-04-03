@@ -5,7 +5,7 @@
 - [x] **1. Unchecked `.unwrap()` calls** — `engine/src/rendering/mod.rs:61,68`, `engine/src/rendering/pipelines/sprite.rs:91`
   The adapter/device initialization and texture loading use `.unwrap()`. These should propagate errors with `?` rather than panicking on GPU unavailability or missing assets.
 
-- [ ] **2. Animation index out-of-bounds** — `bomberjack/src/game/mod.rs:31-43`
+- [x] **2. Animation index out-of-bounds** — `bomberjack/src/game/mod.rs:31-43`
   `self.frames[self.current_frame]` will panic if `frames` is empty. Use `.get()` or add a debug assertion.
 
 ## Medium Priority

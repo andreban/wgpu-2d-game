@@ -29,8 +29,9 @@ impl Animation {
     }
 
     pub fn next_frame(&mut self) -> Vector4<f32> {
+        debug_assert!(!self.frames.is_empty(), "Animation has no frames");
         let frame = self.frames[self.current_frame];
-        self.current_frame = if self.current_frame == self.frames.len() - 1 {
+        self.current_frame = if self.current_frame + 1 >= self.frames.len() {
             if self.looping {
                 0
             } else {
@@ -43,6 +44,7 @@ impl Animation {
     }
 
     pub fn current_frame(&self) -> Vector4<f32> {
+        debug_assert!(!self.frames.is_empty(), "Animation has no frames");
         self.frames[self.current_frame]
     }
 }
