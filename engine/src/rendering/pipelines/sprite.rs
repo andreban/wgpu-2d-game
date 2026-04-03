@@ -87,6 +87,8 @@ impl<'a> SpritePipeline {
         queue: &mut Queue,
         configuration: &SurfaceConfiguration,
         texture_bytes: &[u8],
+        world_width: f32,
+        world_height: f32,
     ) -> Result<Self, EngineError> {
         let diffuse_texture = Texture::from_bytes(device, queue, texture_bytes, "texture")?;
 
@@ -134,7 +136,7 @@ impl<'a> SpritePipeline {
         });
 
         // Camera Uniform
-        let camera2d = Camera2d::new(600.0, 650.0);
+        let camera2d = Camera2d::new(world_width, world_height);
         let mut camera_uniform = CameraUniform::default();
         camera_uniform.update_view_proj(&camera2d);
 

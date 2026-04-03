@@ -82,6 +82,8 @@ impl<'a> SquarePipeline {
         device: &mut Device,
         _queue: &mut Queue,
         configuration: &SurfaceConfiguration,
+        world_width: f32,
+        world_height: f32,
     ) -> Self {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
@@ -89,7 +91,7 @@ impl<'a> SquarePipeline {
         });
 
         // Camera Uniform
-        let camera2d = Camera2d::new(600.0, 650.0);
+        let camera2d = Camera2d::new(world_width, world_height);
         let mut camera_uniform = CameraUniform::default();
         camera_uniform.update_view_proj(&camera2d);
 

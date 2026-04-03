@@ -13,7 +13,7 @@
 - [x] **3. Texture hardcoded in the engine** — `engine/src/rendering/pipelines/sprite.rs:89`
   The engine library directly references the game's texture, destroying its reusability. Texture should be passed as a parameter to `SpritePipeline::new()`.
 
-- [ ] **4. Hardcoded camera dimensions** — `engine/src/rendering/pipelines/sprite.rs:137`, `engine/src/rendering/pipelines/square.rs:92`
+- [x] **4. Hardcoded camera dimensions** — `engine/src/rendering/pipelines/sprite.rs:137`, `engine/src/rendering/pipelines/square.rs:92`
   `Camera2d::new(600.0, 650.0)` is hardcoded inside pipeline constructors. These should come from `SurfaceConfiguration` or be constructor parameters.
 
 - [ ] **5. Instance buffer overflow** — `engine/src/rendering/pipelines/sprite.rs:266-272`

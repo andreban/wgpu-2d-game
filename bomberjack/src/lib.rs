@@ -29,7 +29,7 @@ impl ApplicationHandler for Game {
             .unwrap();
         let window = Arc::new(window);
         let texture_bytes = include_bytes!("assets/texture.png");
-        self.graphics = Some(pollster::block_on(Graphics::new(window.clone(), texture_bytes)).unwrap());
+        self.graphics = Some(pollster::block_on(Graphics::new(window.clone(), texture_bytes, 600.0, 650.0)).unwrap());
         self.window = Some(window);
     }
 
