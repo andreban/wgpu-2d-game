@@ -45,7 +45,7 @@ pub struct Graphics {
 }
 
 impl Graphics {
-    pub async fn new(window: Arc<Window>) -> Result<Self, EngineError> {
+    pub async fn new(window: Arc<Window>, texture_bytes: &[u8]) -> Result<Self, EngineError> {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::default();
@@ -82,7 +82,7 @@ impl Graphics {
         let staging_belt = wgpu::util::StagingBelt::new(device.clone(), 1024);
 
         let square_pipeline = SquarePipeline::new(&mut device, &mut queue, &configuration);
-        let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration)?;
+        let sprite_pipeline = SpritePipeline::new(&mut device, &mut queue, &configuration, texture_bytes)?;
 
         let font_system = FontSystem::new();
         let swash_cache = SwashCache::new();

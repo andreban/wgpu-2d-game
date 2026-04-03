@@ -86,9 +86,9 @@ impl<'a> SpritePipeline {
         device: &mut Device,
         queue: &mut Queue,
         configuration: &SurfaceConfiguration,
+        texture_bytes: &[u8],
     ) -> Result<Self, EngineError> {
-        let diffuse_bytes = include_bytes!("../../../../bomberjack/src/assets/texture.png");
-        let diffuse_texture = Texture::from_bytes(device, queue, diffuse_bytes, "texture.png")?;
+        let diffuse_texture = Texture::from_bytes(device, queue, texture_bytes, "texture")?;
 
         let texture_bind_group_layout =
             &device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {

@@ -10,7 +10,7 @@
 
 ## Medium Priority
 
-- [ ] **3. Texture hardcoded in the engine** — `engine/src/rendering/pipelines/sprite.rs:89`
+- [x] **3. Texture hardcoded in the engine** — `engine/src/rendering/pipelines/sprite.rs:89`
   The engine library directly references the game's texture, destroying its reusability. Texture should be passed as a parameter to `SpritePipeline::new()`.
 
 - [ ] **4. Hardcoded camera dimensions** — `engine/src/rendering/pipelines/sprite.rs:137`, `engine/src/rendering/pipelines/square.rs:92`
