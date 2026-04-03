@@ -45,7 +45,7 @@ impl Bomb {
 
     pub fn next_frame(&mut self) {
         self.update_count += 1;
-        if self.update_count % 2 == 0 {
+        if self.update_count.is_multiple_of(2) {
             self.animations[self.state].next_frame();
         }
     }

@@ -172,7 +172,10 @@ impl<'a> SpritePipeline {
         let render_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
-                bind_group_layouts: &[Some(camera_bind_group_layout), Some(texture_bind_group_layout)],
+                bind_group_layouts: &[
+                    Some(camera_bind_group_layout),
+                    Some(texture_bind_group_layout),
+                ],
                 immediate_size: 0,
             });
 

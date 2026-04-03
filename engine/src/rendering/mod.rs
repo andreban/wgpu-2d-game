@@ -114,15 +114,11 @@ impl Graphics {
         }
     }
 
-    pub fn render(
-        &mut self,
-        squares: &[Square],
-        sprites: &[Sprite],
-        score: u32,
-    ) {
+    pub fn render(&mut self, squares: &[Square], sprites: &[Sprite], _score: u32) {
         // Setup render.
         let output = match self.surface.get_current_texture() {
-            wgpu::CurrentSurfaceTexture::Success(t) | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+            wgpu::CurrentSurfaceTexture::Success(t)
+            | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
             _ => return,
         };
         let view = &output
@@ -221,7 +217,8 @@ impl<'a> Canvas<'a> {
     fn render(&mut self) {
         // Setup render.
         let output = match self.graphics.surface.get_current_texture() {
-            wgpu::CurrentSurfaceTexture::Success(t) | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+            wgpu::CurrentSurfaceTexture::Success(t)
+            | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
             _ => return,
         };
         let view = &output

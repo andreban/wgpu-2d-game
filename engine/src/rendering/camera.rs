@@ -1,6 +1,6 @@
+use cgmath::SquareMatrix;
 use cgmath::Vector2;
 use winit::dpi::PhysicalSize;
-use cgmath::SquareMatrix;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]

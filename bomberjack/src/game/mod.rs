@@ -191,7 +191,7 @@ impl BombJackGame {
                 self.jack.thrust
             }
         } else {
-            (self.jack.thrust - 0.4).max(00.0).min(20.0)
+            (self.jack.thrust - 0.4).clamp(0.0, 20.0)
         };
 
         self.jack.position.y = self
@@ -239,7 +239,7 @@ impl BombJackGame {
             bomb.next_frame();
         }
 
-        if self.frame % 2 == 0 {
+        if self.frame.is_multiple_of(2) {
             self.jack.next_frame();
         }
     }
