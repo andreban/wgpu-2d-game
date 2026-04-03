@@ -277,5 +277,6 @@ impl BombJackGame {
         }
 
         canvas.draw_sprite(&Sprite::from(&self.jack));
+        canvas.set_score(self.score);
     }
 }

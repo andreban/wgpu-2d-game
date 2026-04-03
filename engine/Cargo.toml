@@ -13,6 +13,6 @@ image = { version = "0.25", default-features = false, features = [
     "jpeg",
     "png",
 ] }
+glyphon = { git = "https://github.com/grovesNL/glyphon" }
 wgpu = { version = "29", default-features = false, features = ["std", "wgsl", "vulkan"] }
-# wgpu_glyph = "0.21.0"
 winit = "0.30"
