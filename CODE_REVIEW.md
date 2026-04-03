@@ -30,8 +30,8 @@
 
 ## Low Priority
 
-- [ ] **9. `Canvas::done()` is redundant** — `engine/src/rendering/mod.rs:156`
-  `drop(self)` inside `done()` is a no-op since the caller could just drop it. The implicit rendering-on-drop pattern should at least be clearly documented.
+- [x] **9. `Canvas::done()` is redundant** — `engine/src/rendering/mod.rs:156`
+  ~~`drop(self)` inside `done()` is a no-op since the caller could just drop it.~~ No longer applies: `done()` now returns `Result<(), EngineError>` and is the primary way callers surface render errors. `Drop` is the silent fallback.
 
 - [ ] **10. `Bomb::disarmed` field** — `bomberjack/src/game/bomb.rs:17,39`
   This field is initialized but never read. Remove it or implement the mechanic.
