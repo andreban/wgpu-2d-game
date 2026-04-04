@@ -227,7 +227,7 @@ impl<'a> Canvas<'a> {
         let output = match self.graphics.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(t)
             | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
-            _ => return Ok(()),
+            other => return Err(EngineError::SurfaceTexture(format!("{other:?}"))),
         };
         let view = &output
             .texture

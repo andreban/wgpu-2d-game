@@ -10,6 +10,8 @@ pub enum EngineError {
     Texture(#[from] image::ImageError),
     #[error("Too many instances: {count} exceeds maximum of {max}")]
     TooManyInstances { count: usize, max: usize },
+    #[error("Failed to acquire surface texture: {0}")]
+    SurfaceTexture(String),
     #[error("Failed to prepare text: {0}")]
     TextPrepare(#[from] glyphon::PrepareError),
     #[error("Failed to render text: {0}")]

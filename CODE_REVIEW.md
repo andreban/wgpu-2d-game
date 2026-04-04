@@ -25,7 +25,7 @@
 - [x] **7. Floating-point equality comparison** — `bomberjack/src/game/mod.rs:211,222`
   `self.jack.position.y == original_y` is unreliable due to `f32` accumulation errors. Use an epsilon comparison.
 
-- [ ] **8. Silent render failure** — `engine/src/rendering/mod.rs:160-165`
+- [x] **8. Silent render failure** — `engine/src/rendering/mod.rs:160-165`
   Surface texture acquisition failures are silently ignored (`_ => return`). At minimum, log the error.
 
 ## Low Priority
