@@ -3,6 +3,7 @@ use winit::{
     keyboard::{Key, NamedKey},
 };
 
+#[derive(Default)]
 pub struct InputState {
     pub up_pressed: bool,
     pub down_pressed: bool,
@@ -11,15 +12,6 @@ pub struct InputState {
 }
 
 impl InputState {
-    pub fn new() -> Self {
-        Self {
-            up_pressed: false,
-            down_pressed: false,
-            left_pressed: false,
-            right_pressed: false,
-        }
-    }
-
     pub fn update(&mut self, input: &KeyEvent) {
         match input.logical_key {
             Key::Named(NamedKey::ArrowUp) => {

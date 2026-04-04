@@ -72,7 +72,7 @@ impl ApplicationHandler for Game {
 pub async fn run() {
     let event_loop = EventLoop::new().unwrap();
     let mut game: Game = Game {
-        input_state: InputState::new(),
+        input_state: InputState::default(),
         graphics: None,
         game: None,
         window: None,

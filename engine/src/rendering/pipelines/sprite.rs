@@ -83,8 +83,8 @@ pub struct SpritePipeline {
 
 impl<'a> SpritePipeline {
     pub fn new(
-        device: &mut Device,
-        queue: &mut Queue,
+        device: &Device,
+        queue: &Queue,
         configuration: &SurfaceConfiguration,
         texture_bytes: &[u8],
         world_width: f32,
@@ -262,7 +262,7 @@ impl<'a> SpritePipeline {
     pub fn render(
         &'a mut self,
         render_pass: &mut RenderPass<'a>,
-        queue: &mut Queue,
+        queue: &Queue,
         sprites: &[Sprite],
     ) -> Result<(), EngineError> {
         if sprites.len() > MAX_INSTANCES {

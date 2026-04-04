@@ -14,7 +14,6 @@ pub struct Bomb {
     pub position: Vector2<f32>,
     pub size: LogicalSize<f32>,
     pub texture: Vector4<f32>, //x0, y0, x1, y1 - or (0.0, 0.0, 1.0, 1.0)
-    pub disarmed: bool,
     pub state: State,
     animations: EnumMap<State, Animation>,
     update_count: u32,
@@ -36,7 +35,6 @@ impl Bomb {
             position: (x, y).into(),
             size: LogicalSize::new(36.0, 48.0),
             texture: texture_helper.texture_coord(601.0, 112.0, 35.0, 47.0),
-            disarmed: false,
             state: State::Live,
             animations,
             update_count: 0,

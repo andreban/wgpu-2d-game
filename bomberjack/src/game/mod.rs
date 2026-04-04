@@ -14,6 +14,7 @@ use winit::dpi::LogicalSize;
 
 pub const CANVAS_WIDTH: f32 = 600.0;
 pub const CANVAS_HEIGHT: f32 = 650.0;
+const PLATFORM_COLLISION_TOLERANCE: f32 = 4.0;
 
 pub struct Animation {
     frames: Vec<Vector4<f32>>,
@@ -267,7 +268,7 @@ impl BombJackGame {
         for platform in &self.platforms {
             if x >= platform.position.x
                 && x <= platform.position.x + platform.size.width
-                && y >= platform.position.y + platform.size.height - 4.0
+                && y >= platform.position.y + platform.size.height - PLATFORM_COLLISION_TOLERANCE
                 && y <= platform.position.y + platform.size.height
             {
                 return true;

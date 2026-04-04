@@ -66,7 +66,7 @@ impl Graphics {
             })
             .await?;
 
-        let (mut device, mut queue) = adapter
+        let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 ..Default::default()
             })
@@ -88,16 +88,11 @@ impl Graphics {
 
         let staging_belt = wgpu::util::StagingBelt::new(device.clone(), 1024);
 
-        let square_pipeline = SquarePipeline::new(
-            &mut device,
-            &mut queue,
-            &configuration,
-            world_width,
-            world_height,
-        );
+        let square_pipeline =
+            SquarePipeline::new(&device, &queue, &configuration, world_width, world_height);
         let sprite_pipeline = SpritePipeline::new(
-            &mut device,
-            &mut queue,
+            &device,
+            &queue,
             &configuration,
             texture_bytes,
             world_width,
@@ -265,14 +260,14 @@ impl<'a> Canvas<'a> {
 
         self.graphics.sprite_pipeline.render(
             &mut render_pass,
-            &mut self.graphics.queue,
+            &self.graphics.queue,
             &self.sprites,
         )?;
 
         if !self.rects.is_empty() {
             self.graphics.square_pipeline.render(
                 &mut render_pass,
-                &mut self.graphics.queue,
+                &self.graphics.queue,
                 &self.rects,
             )?;
         }

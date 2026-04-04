@@ -80,8 +80,8 @@ pub struct SquarePipeline {
 
 impl<'a> SquarePipeline {
     pub fn new(
-        device: &mut Device,
-        _queue: &mut Queue,
+        device: &Device,
+        _queue: &Queue,
         configuration: &SurfaceConfiguration,
         world_width: f32,
         world_height: f32,
@@ -213,7 +213,7 @@ impl<'a> SquarePipeline {
     pub fn render(
         &'a mut self,
         render_pass: &mut RenderPass<'a>,
-        queue: &mut Queue,
+        queue: &Queue,
         squares: &[Square],
     ) -> Result<(), EngineError> {
         if squares.len() > MAX_INSTANCES {

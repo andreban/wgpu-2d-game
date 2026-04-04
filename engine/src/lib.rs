@@ -1,5 +1,4 @@
 pub mod error;
-pub mod input;
 pub mod rendering;
 
 pub mod prelude {
