@@ -5,7 +5,9 @@ use crate::game::jack::Direction;
 use crate::InputState;
 use bomb::Bomb;
 use cgmath::{Vector2, Vector4};
-use engine::{rendering::shapes::Sprite, rendering::Canvas};
+use engine::{
+    rendering::shapes::Sprite, rendering::Canvas, rendering::FontSystem, rendering::TextLabel,
+};
 use jack::Jack;
 use std::time::{Duration, Instant};
 use winit::dpi::LogicalSize;
@@ -86,10 +88,12 @@ pub struct BombJackGame {
     last_update: Instant,
     frame: u32,
     pub score: u32,
+    score_label: TextLabel,
+    score_dirty: bool,
 }
 
 impl BombJackGame {
-    pub fn new() -> Self {
+    pub fn new(font_system: &mut FontSystem) -> Self {
         let texture_helper = TextureHelper::new(1162.0, 650.0);
         Self {
             background: Sprite {
@@ -160,6 +164,8 @@ impl BombJackGame {
             last_update: Instant::now(),
             frame: 0,
             score: 0,
+            score_label: TextLabel::new(font_system, "SCORE: 0"),
+            score_dirty: false,
         }
     }
 
@@ -237,6 +243,7 @@ impl BombJackGame {
             {
                 bomb.state = bomb::State::Collected;
                 self.score += 100;
+                self.score_dirty = true;
             }
             bomb.next_frame();
         }
@@ -267,7 +274,13 @@ impl BombJackGame {
         false
     }
 
-    pub fn render(&mut self, canvas: &mut Canvas) {
+    pub fn render<'a>(&'a mut self, canvas: &mut Canvas<'a>) {
+        if self.score_dirty {
+            let text = format!("SCORE: {}", self.score);
+            self.score_label.set_text(canvas.font_system(), &text);
+            self.score_dirty = false;
+        }
+
         canvas.draw_sprite(&self.background);
 
         for platform in &self.platforms {
@@ -279,6 +292,6 @@ impl BombJackGame {
         }
 
         canvas.draw_sprite(&Sprite::from(&self.jack));
-        canvas.set_score(self.score);
+        canvas.draw_text(&self.score_label, 350.0, 10.0);
     }
 }

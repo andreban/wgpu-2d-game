@@ -14,7 +14,7 @@ use input::InputState;
 struct Game {
     input_state: InputState,
     graphics: Option<Graphics>,
-    game: BombJackGame,
+    game: Option<BombJackGame>,
     window: Option<Arc<Window>>,
 }
 
@@ -29,9 +29,10 @@ impl ApplicationHandler for Game {
             .unwrap();
         let window = Arc::new(window);
         let texture_bytes = include_bytes!("assets/texture.png");
-        self.graphics = Some(
-            pollster::block_on(Graphics::new(window.clone(), texture_bytes, 600.0, 650.0)).unwrap(),
-        );
+        let mut graphics =
+            pollster::block_on(Graphics::new(window.clone(), texture_bytes, 600.0, 650.0)).unwrap();
+        self.game = Some(BombJackGame::new(&mut graphics.font_system));
+        self.graphics = Some(graphics);
         self.window = Some(window);
     }
 
@@ -47,10 +48,10 @@ impl ApplicationHandler for Game {
                 event_loop.exit();
             }
             WindowEvent::RedrawRequested => {
-                if let Some(graphics) = &mut self.graphics {
+                if let (Some(graphics), Some(game)) = (&mut self.graphics, &mut self.game) {
                     let mut canvas = Canvas::new(graphics);
-                    self.game.update(&self.input_state);
-                    self.game.render(&mut canvas);
+                    game.update(&self.input_state);
+                    game.render(&mut canvas);
                     if let Err(e) = canvas.done() {
                         eprintln!("Render error: {e}");
                     }
@@ -73,7 +74,7 @@ pub async fn run() {
     let mut game: Game = Game {
         input_state: InputState::new(),
         graphics: None,
-        game: BombJackGame::new(),
+        game: None,
         window: None,
     };
     event_loop.run_app(&mut game).unwrap();

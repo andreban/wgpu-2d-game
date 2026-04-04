@@ -1,17 +1,19 @@
 pub mod camera;
 pub mod pipelines;
 pub mod shapes;
+pub mod text;
 pub mod texture;
 
 use crate::error::EngineError;
+pub use glyphon::FontSystem;
 use glyphon::{
-    Attrs, Buffer, Cache, Color, Family, FontSystem, Metrics, Resolution, Shaping, SwashCache,
-    TextArea, TextAtlas, TextBounds, TextRenderer, Viewport,
+    Cache, Color, Resolution, SwashCache, TextArea, TextAtlas, TextBounds, TextRenderer, Viewport,
 };
 use pipelines::{SpritePipeline, SquarePipeline};
 use shapes::{Sprite, Square};
 use std::iter;
 use std::sync::Arc;
+pub use text::TextLabel;
 use wgpu::util::StagingBelt;
 use wgpu::{Adapter, Device, Instance, Queue, Surface, SurfaceConfiguration};
 use winit::dpi::PhysicalSize;
@@ -142,13 +144,49 @@ impl Graphics {
             self.surface.configure(&self.device, &self.configuration);
         }
     }
+
+    pub fn prepare_text(&mut self, texts: &[(&TextLabel, f32, f32)]) -> Result<(), EngineError> {
+        let (width, height) = (self.size.width, self.size.height);
+
+        self.text_viewport
+            .update(&self.queue, Resolution { width, height });
+
+        let text_areas: Vec<TextArea> = texts
+            .iter()
+            .map(|(label, x, y)| TextArea {
+                buffer: &label.buffer,
+                left: *x,
+                top: *y,
+                scale: 1.0,
+                bounds: TextBounds {
+                    left: 0,
+                    top: 0,
+                    right: width as i32,
+                    bottom: height as i32,
+                },
+                default_color: Color::rgb(255, 255, 0),
+                custom_glyphs: &[],
+            })
+            .collect();
+
+        self.text_renderer.prepare(
+            &self.device,
+            &self.queue,
+            &mut self.font_system,
+            &mut self.text_atlas,
+            &self.text_viewport,
+            text_areas,
+            &mut self.swash_cache,
+        )?;
+        Ok(())
+    }
 }
 
 pub struct Canvas<'a> {
     graphics: &'a mut Graphics,
     sprites: Vec<Sprite>,
     rects: Vec<Square>,
-    score: Option<u32>,
+    texts: Vec<(&'a TextLabel, f32, f32)>,
     rendered: bool,
 }
 
@@ -158,7 +196,7 @@ impl<'a> Canvas<'a> {
             graphics,
             sprites: vec![],
             rects: vec![],
-            score: None,
+            texts: vec![],
             rendered: false,
         }
     }
@@ -171,8 +209,12 @@ impl<'a> Canvas<'a> {
         self.rects.push(*rect);
     }
 
-    pub fn set_score(&mut self, score: u32) {
-        self.score = Some(score);
+    pub fn draw_text(&mut self, label: &'a TextLabel, x: f32, y: f32) {
+        self.texts.push((label, x, y));
+    }
+
+    pub fn font_system(&mut self) -> &mut FontSystem {
+        &mut self.graphics.font_system
     }
 
     pub fn done(mut self) -> Result<(), EngineError> {
@@ -197,58 +239,8 @@ impl<'a> Canvas<'a> {
                     label: Some("Render Encoder"),
                 });
 
-        // Prepare text rendering before the render pass.
-        if let Some(score) = self.score {
-            let score_text = format!("SCORE: {score}");
-            let g = &mut self.graphics;
-
-            let mut buffer = Buffer::new(&mut g.font_system, Metrics::new(30.0, 42.0));
-            buffer.set_size(
-                &mut g.font_system,
-                Some(g.size.width as f32),
-                Some(g.size.height as f32),
-            );
-            buffer.set_text(
-                &mut g.font_system,
-                &score_text,
-                &Attrs::new().family(Family::SansSerif),
-                Shaping::Advanced,
-                None,
-            );
-            buffer.shape_until_scroll(&mut g.font_system, false);
-
-            g.text_viewport.update(
-                &g.queue,
-                Resolution {
-                    width: g.size.width,
-                    height: g.size.height,
-                },
-            );
-
-            g.text_renderer
-                .prepare(
-                    &g.device,
-                    &g.queue,
-                    &mut g.font_system,
-                    &mut g.text_atlas,
-                    &g.text_viewport,
-                    [TextArea {
-                        buffer: &buffer,
-                        left: 350.0,
-                        top: 10.0,
-                        scale: 1.0,
-                        bounds: TextBounds {
-                            left: 0,
-                            top: 0,
-                            right: g.size.width as i32,
-                            bottom: g.size.height as i32,
-                        },
-                        default_color: Color::rgb(255, 255, 0),
-                        custom_glyphs: &[],
-                    }],
-                    &mut g.swash_cache,
-                )
-                .unwrap();
+        if !self.texts.is_empty() {
+            self.graphics.prepare_text(&self.texts)?;
         }
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -285,15 +277,12 @@ impl<'a> Canvas<'a> {
             )?;
         }
 
-        if self.score.is_some() {
-            self.graphics
-                .text_renderer
-                .render(
-                    &self.graphics.text_atlas,
-                    &self.graphics.text_viewport,
-                    &mut render_pass,
-                )
-                .unwrap();
+        if !self.texts.is_empty() {
+            self.graphics.text_renderer.render(
+                &self.graphics.text_atlas,
+                &self.graphics.text_viewport,
+                &mut render_pass,
+            )?;
         }
 
         drop(render_pass);

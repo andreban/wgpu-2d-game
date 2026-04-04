@@ -19,7 +19,7 @@
 - [x] **5. Instance buffer overflow** — `engine/src/rendering/pipelines/sprite.rs:266-272`
   No check that `sprites.len() <= MAX_INSTANCES`. Writing past the buffer limit is silent corruption. Add a bounds check before `write_buffer`.
 
-- [ ] **6. Text buffer recreated every frame** — `engine/src/rendering/mod.rs:181-194`
+- [x] **6. Text buffer recreated every frame** — `engine/src/rendering/mod.rs:181-194`
   A new `glyphon::Buffer` is allocated on every render call. This should be cached and only updated when the score changes.
 
 - [ ] **7. Floating-point equality comparison** — `bomberjack/src/game/mod.rs:211,222`
