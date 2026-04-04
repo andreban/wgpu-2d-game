@@ -216,22 +216,24 @@ impl BombJackGame {
 
         if input_state.left_pressed && self.jack.position.x > self.game_bounds.bottom_left.x {
             self.jack.position.x -= 2.0;
-            self.jack.direction = if self.jack.position.y == original_y && on_ground {
-                Direction::Left
-            } else {
-                Direction::UpLeft
-            }
+            self.jack.direction =
+                if (self.jack.position.y - original_y).abs() < f32::EPSILON && on_ground {
+                    Direction::Left
+                } else {
+                    Direction::UpLeft
+                }
         }
 
         if input_state.right_pressed
             && (self.jack.position.x + self.jack.size.width) < self.game_bounds.top_right.x
         {
             self.jack.position.x += 2.0;
-            self.jack.direction = if self.jack.position.y == original_y && on_ground {
-                Direction::Right
-            } else {
-                Direction::UpRight
-            };
+            self.jack.direction =
+                if (self.jack.position.y - original_y).abs() < f32::EPSILON && on_ground {
+                    Direction::Right
+                } else {
+                    Direction::UpRight
+                };
         }
 
         for bomb in &mut self.bombs {

@@ -22,7 +22,7 @@
 - [x] **6. Text buffer recreated every frame** — `engine/src/rendering/mod.rs:181-194`
   A new `glyphon::Buffer` is allocated on every render call. This should be cached and only updated when the score changes.
 
-- [ ] **7. Floating-point equality comparison** — `bomberjack/src/game/mod.rs:211,222`
+- [x] **7. Floating-point equality comparison** — `bomberjack/src/game/mod.rs:211,222`
   `self.jack.position.y == original_y` is unreliable due to `f32` accumulation errors. Use an epsilon comparison.
 
 - [ ] **8. Silent render failure** — `engine/src/rendering/mod.rs:160-165`
