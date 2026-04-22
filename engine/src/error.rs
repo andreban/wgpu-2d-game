@@ -1,3 +1,7 @@
+// Copyright 2022 Andre Cipriani Bandarra
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #[derive(Debug, thiserror::Error)]
 pub enum EngineError {
     #[error("Failed to create surface: {0}")]

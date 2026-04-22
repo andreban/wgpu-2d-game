@@ -5,3 +5,9 @@ Rust implementation of the ["Bomb Jack" game][1], shipped on the [Wireframe][3] 
 [1]: https://www.raspberrypi.com/news/code-an-explosive-homage-to-bomb-jack-wireframe-59/
 [2]: https://github.com/Wireframe-Magazine/Wireframe-59/
 [3]: https://wireframe.raspberrypi.com/
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
+
+Copyright 2022 Andre Cipriani Bandarra

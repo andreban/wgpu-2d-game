@@ -1,3 +1,7 @@
+// Copyright 2022 Andre Cipriani Bandarra
+//
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::error::EngineError;
 use crate::rendering::camera::{Camera2d, CameraUniform};
 use crate::rendering::pipelines::{Vertex, SQUARE_INDICES, SQUARE_VERTICES};
